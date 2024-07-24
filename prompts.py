@@ -21,13 +21,13 @@ zero_shot_prompts = {
 - Truck
 3. **RELATIONSHIP**: Refers to one of the following:
 - Positional: `inFrontOf`, `toLeftOf`, `toRightOf`
-- Distance-based: `very_near` (within 10 meters), `near` (within 25 meters), `visible` (within 50 meters)
+- Distance-based: `within_25m` (within 25 meters), `between_25m_and_40m` (between 25 and 40 meters), `between_40m_and_60m` (between 40 and 60 meters)
 
 ### Instructions:
 1. Identify all OBJECTS in the scene. Only include objects that are clearly visible, identifiable, and relevant in the image. Do not include objects that are not present.
 2. For each OBJECT, generate two RELATIONSHIPS with the ego:
 - One positional RELATIONSHIP (`inFrontOf`, `toLeftOf`, `toRightOf`)
-- One distance-based RELATIONSHIP (`very_near`, `near`, `visible`)
+- One distance-based RELATIONSHIP (`within_25m`, `between_25m_and_40m`, `between_40m_and_60m`)
 3. Use the following structured format for your output.
 4. Verify that each OBJECT is clearly visible and identifiable in the image before including it in the output.
 
@@ -45,9 +45,9 @@ Given an image with one bus and one car, the output should be:
 ```
 [
 (bus, inFrontOf, ego),
-(bus, near, ego),
+(bus, between_25m_and_40m, ego),
 (car, toLeftOf, ego),
-(car, very_near, ego)
+(car, within_25m, ego)
 ]
 ```
 
@@ -68,8 +68,8 @@ Using the above prompt format, please analyze the following image and generate t
 """
 From now on, whenever I type 'ego', I am referring to the vehicle holding the camera and capturing the scene, therefore it does not appear in the image.
 From now on, whenever I type OBJECT, I am referring to one of the following OBJECTS: person, bicycle, bus, car, construction vehicle, emergency vehicle, motorcycle, trailer truck, truck.
-From now on, whenever I ask for a RELATIONSHIP, I am asking for one of the following RELATIONSHIPS: inFrontOf, toLeftOf, toRightOf, very_near, near, visible. Where the last three RELATIONSHIPS describe distances of 10, 25, and 50 meters between an OBJECT and the ego.
-I want you to generate only 2 RELATIONSHIPS betwewn the OBJECT and ego for each OBJECT in the scene. The first relationship should be one of the three RELATIONSHIPS (inFrontOf, toLeftOf, toRightOf) and the second relationship should be one of the three RELATIONSHIPS (very_near, near, visible). For example: if there is one OBJECT in the scene you should output 2 RELATIONSHIPS, if there are 3 OBJECTS you should output 6 RELATIONSHIPS, if there are n OBJECTS you should output 2n RELATIONSHIPS.
+From now on, whenever I ask for a RELATIONSHIP, I am asking for one of the following RELATIONSHIPS: inFrontOf, toLeftOf, toRightOf, within_25m, between_25m_and_40m, between_40m_and_60m. Where the last three RELATIONSHIPS describe distances of 10, 25, and 50 meters between an OBJECT and the ego.
+I want you to generate only 2 RELATIONSHIPS between the OBJECT and ego for each OBJECT in the scene. The first relationship should be one of the three RELATIONSHIPS (inFrontOf, toLeftOf, toRightOf) and the second relationship should be one of the three RELATIONSHIPS (within_25m, between_25m_and_40m, between_40m_and_60m). For example: if there is one OBJECT in the scene you should output 2 RELATIONSHIPS, if there are 3 OBJECTS you should output 6 RELATIONSHIPS, if there are n OBJECTS you should output 2n RELATIONSHIPS.
 I am going to provide a template for your output. Every word in capital letters is a placeholder. Anytime that you generate text, fit it into one of the placeholders that I list. Preserve the formatting and overall template:
 [OBJECT, RELATIONSHIP, ego]
 """

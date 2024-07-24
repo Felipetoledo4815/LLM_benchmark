@@ -1,77 +1,83 @@
 import argparse
-import io
-import base64
 import sys
 import random
-from llama_cpp.llama_chat_format import Llava15ChatHandler
-from llama_cpp import Llama
-from PIL import Image
+from tqdm import tqdm
 from prompts import zero_shot_prompts
-from logger import Logger
-from metrics import Metrics
-#TODO: how to turn this repo into a python module?
+from utils.logger import Logger
+from utils.metrics import Metrics
+from vlm.space_llava_wrapper import SpaceLlavaWrapper
+from vlm.mobile_vlm_wrapper import MobileVLM
+from vlm.hf_llava_next_wrapper import HFLlavaNextWrapper
+from vlm.hf_llava_wrapper import HFLlavaWrapper
+from vlm.hf_pali_gemma_wrapper import HFPaliGemma
+from vlm.open_flamingo_wrapper import OpenFlamingo
+# TODO: how to turn this repo into a python module?
 sys.path.append('../LLM_SRP/')
 from dataset.llm_srp_dataset import LLMSRPDataset
-
-
-def image_to_base64_data_uri(image_input):
-    # Check if the input is a file path (string)
-    if isinstance(image_input, str):
-        with open(image_input, "rb") as img_file:
-            base64_data = base64.b64encode(img_file.read()).decode('utf-8')
-
-    # Check if the input is a PIL Image
-    elif isinstance(image_input, Image.Image):
-        buffer = io.BytesIO()
-        image_input.save(buffer, format="PNG")  # You can change the format if needed
-        base64_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
-
-    else:
-        raise ValueError("Unsupported input type. Input must be a file path or a PIL.Image.Image instance.")
-
-    return f"data:image/png;base64,{base64_data}"
 
 
 def main():
     parser = argparse.ArgumentParser("Benchmark for spatial relationships.")
     parser.add_argument('--nr_images', type=int, default=10, help='Number of images to use for the benchmark.')
+    parser.add_argument('--log_folder', type=str, default='./logs/test/', help='Log file to store the results.')
+    parser.add_argument("--model", type=str,
+                        choices=['spacellava', 'llava_1.5', 'llava_1.6_mistral',
+                                 'llava_1.6_vicuna', "paligemma", "mobilevlm", "openflamingo"],
+                        default='llava_1.5', help='Model to use for inference.')
     args = parser.parse_args()
 
     print("Number of images: ", args.nr_images)
 
-    llm_srp_dataset = LLMSRPDataset(['nuscenes'])
-    logger = Logger("log.txt", overwrite=False)
-    metrics = Metrics()
+    llm_srp_dataset = LLMSRPDataset(['nuscenes'], configs={'nuscenes': 'nuscenes_mini'})
+    logger = Logger(args.log_folder, datasets_used=llm_srp_dataset.get_dataset_names())
+    metrics = Metrics(llm_srp_dataset.get_entity_names(), llm_srp_dataset.get_relationship_names())
+    prompt = zero_shot_prompts['list_of_triplets'][0]['prompt']
 
-    # TODO: add wrapper class for other types of models: GPT api, Hugging face transformers, and llama cpp
-    mmproj = "./models/mmproj-model-f16.gguf"
-    model_path = "./models/ggml-model-q4_0.gguf"
-    chat_handler = Llava15ChatHandler(clip_model_path=mmproj, verbose=True)
-    spacellava = Llama(model_path=model_path, chat_handler=chat_handler,
-                       n_ctx=3072, logits_all=True, n_gpu_layers=-1, verbose=False)
+    if args.model == 'llava_1.5':
+        vlm = HFLlavaWrapper("llava-hf/llava-1.5-7b-hf", cache_dir="./models/llava-1.5-7b-hf")
+    elif args.model == 'llava_1.6_mistral':
+        vlm = HFLlavaNextWrapper("llava-hf/llava-v1.6-mistral-7b-hf", cache_dir="./models/llava-v1.6-mistral-7b-hf")
+    elif args.model == 'llava_1.6_vicuna':
+        vlm = HFLlavaNextWrapper("llava-hf/llava-v1.6-vicuna-13b-hf", cache_dir="./models/llava-v1.6-vicuna-13b-hf")
+    elif args.model == 'spacellava':
+        vlm = SpaceLlavaWrapper(clip_path="./models/spacellava/mmproj-model-f16.gguf",
+                                model_path="./models/spacellava/ggml-model-q4_0.gguf")
+    elif args.model == 'mobilevlm':
+        vlm = MobileVLM(clip_path="./models/mobile-vlm/mmproj-model-f16.gguf",
+                        model_path="./models/mobile-vlm/ggml-model-q4_k.gguf")
+    elif args.model == 'paligemma':
+        vlm = HFPaliGemma("google/paligemma-3b-mix-448", cache_dir="./models/paligemma-3b-mix-448")
+    elif args.model == 'openflamingo':
+        vlm = OpenFlamingo("openflamingo/OpenFlamingo-3B-vitl-mpt1b", cache_dir="./models/OpenFlamingo-3B-vitl-mpt1b")
+    else:
+        raise ValueError(f"Unknown model {args.model}.")
 
-    for i in range(args.nr_images):
+    total_time = 0
+    random.seed(0)
+    for _ in tqdm(range(args.nr_images)):
         r_n = random.randint(0, len(llm_srp_dataset) - 1)
-        img_path, triplets = llm_srp_dataset[r_n]
+        img_path, triplets, _ = llm_srp_dataset[r_n]
 
-        data_uri = image_to_base64_data_uri(img_path)
-        prompt = zero_shot_prompts['list_of_triplets'][0]['prompt']
-        messages = [
-            {"role": "system", "content": "You are an assistant that describe images."},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image_url", "image_url": {"url": data_uri}},
-                    {"type": "text", "text": prompt}
-                ]
-            }
-        ]
-        results = spacellava.create_chat_completion(messages=messages, temperature=0.0)
-        result_str = results["choices"][0]["message"]["content"]
-        sg_iou = metrics.sg_iou(result_str, triplets)
-        logger.log(prediction=result_str, ground_truth=triplets, image_id=r_n, sg_iou=sg_iou)
+        llm_output, time_spent = vlm.inference([prompt], [img_path])
+        total_time += time_spent
 
-    print("Average IoU: ", metrics.get_avg_sg_iou())
+        recall, precision, f1 = metrics.calculate_metrics(llm_output, triplets)
+        logger.log_sample(prediction=llm_output,
+                          ground_truth=triplets,
+                          image_id=r_n,
+                          metrics=(recall, precision, f1),
+                          time=time_spent)
+
+    metrics.plot_heatmaps(logger.get_log_folder() / "heatmaps.png")
+    avg_time_spent = total_time / args.nr_images
+
+    print(f"Average time per prediction: {avg_time_spent:.2f}")
+    print(f"Average recall: {metrics.get_avg_recall():.3f}")
+    print(f"Average precision: {metrics.get_avg_precision():.3f}")
+    print(f"Macro Average F1: {metrics.get_macro_avg_f1():.3f}")
+    print(f"Weighted Average F1: {metrics.get_weighted_avg_f1():.3f}")
+
+    logger.log_summary(metrics, avg_time_spent)
 
 
 if __name__ == '__main__':

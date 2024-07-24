@@ -166,4 +166,4 @@ cython_debug/
 models
 real_images
 dev_files
-log.txt
+logs
