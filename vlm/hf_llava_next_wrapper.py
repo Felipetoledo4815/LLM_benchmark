@@ -1,13 +1,16 @@
 from typing import List, Tuple
+from time import time
 from transformers import LlavaNextProcessor, LlavaNextForConditionalGeneration, BitsAndBytesConfig
 from PIL import Image
-from time import time
 import torch
 from vlm.vlm_interface import VLMInterface
+from utils.prompt_formatter import hf_llava_formatter
+
 
 class HFLlavaNextWrapper(VLMInterface):
     def __init__(self, model_name: str, cache_dir: str | None = None) -> None:
         self.model_name = model_name.split('/')[-1]
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         processor = LlavaNextProcessor.from_pretrained(model_name)
         if isinstance(processor, LlavaNextProcessor):
             self.processor = processor
@@ -19,35 +22,35 @@ class HFLlavaNextWrapper(VLMInterface):
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.float16,
         )
-        self.model = LlavaNextForConditionalGeneration.from_pretrained(
+        model = LlavaNextForConditionalGeneration.from_pretrained(
             model_name,
             cache_dir=cache_dir,
             quantization_config=self.quantization_config,
             device_map="auto",
             low_cpu_mem_usage=True
         )
-
-    def inference(self, prompts: List[str], images: List[str]) -> Tuple[str, float]:
-        image = Image.open(images[0])
-
-        if self.model_name == "llava-v1.6-mistral-7b-hf":
-            message = "[INST] " + prompts[0] + "\n<image> [/INST]"
-        elif self.model_name == "llava-v1.6-34b-hf":
-            message = "<|im_start|>system\nAnswer the questions.<|im_end|><|im_start|>user\n" \
-                f"{prompts[0]}\n<image>\n" \
-                "<|im_end|><|im_start|>assistant\n"
-        elif self.model_name.startswith("llava-v1.6-vicuna-"):
-            message = "A chat between a curious human and an artificial intelligence assistant." \
-                "The assistant gives helpful, detailed, and polite answers to the human's questions." \
-                "USER: " + prompts[0] + " <image> ASSISTANT:"
+        if isinstance(model, LlavaNextForConditionalGeneration):
+            self.model = model
         else:
+            raise ValueError("Model is not an instance of LlavaNextForConditionalGeneration.")
+
+    def inference(self, prompt: str, images: List[str], **kwargs) -> Tuple[str, float]:
+        pil_images = []
+
+        if not (self.model_name in ['llava-v1.6-mistral-7b-hf'] or self.model_name.startswith("llava-v1.6-vicuna-")):
             raise NotImplementedError(f"Prompt for model {self.model_name} has not been implemented.")
+        message, images_to_load = self.parse_prompt(prompt, images, **kwargs)
+
+        for img in images_to_load:
+            pil_images.append(Image.open(img))
+
+        for img in images:
+            pil_images.append(Image.open(img))
 
         start = time()
-        inputs = self.processor(message, image, return_tensors="pt")
-        # # Workaround for bug in llava 1.6 34b https://huggingface.co/llava-hf/llava-v1.6-34b-hf/discussions/8
-        # if self.model_name == "llava-v1.6-34b-hf":
-        #     inputs['input_ids'][inputs['input_ids'] == 64003] = 64000
+        inputs = self.processor(message, pil_images, padding=True, return_tensors="pt")
+        # Move the inputs dictionary to the specified device
+        inputs = {key: tensor.to(self.device) for key, tensor in inputs.items()}
         output_ids = self.model.generate(**inputs, max_new_tokens=150)
         output_str = self.processor.decode(output_ids[0], skip_special_tokens=True)
 
@@ -59,3 +62,8 @@ class HFLlavaNextWrapper(VLMInterface):
         end = time()
 
         return response_str, end - start
+
+    def parse_prompt(self, prompt: str, images: List[str], **kwargs) -> Tuple[str, List[str]]:
+        rel_questions = kwargs.get("rel_questions", [])
+        assert isinstance(rel_questions, list), "Relationship questions need to be a list."
+        return hf_llava_formatter(prompt, images, self.model_name, rel_questions=rel_questions)

@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from utils.utils import parse_string_to_sg
+import numpy as np
 
 
 class Metrics:
@@ -33,7 +33,7 @@ class Metrics:
             formatted_list.append(formatted_tup)
         return formatted_list
 
-    def calculate_recall(self, pred: str | List, target_list: List) -> float:
+    def calculate_recall(self, pred: List, target_list: List) -> float:
         """
         Calculate recall for a single prediction.
         :param pred: Prediction in string or list format.
@@ -41,8 +41,7 @@ class Metrics:
         :return: Recall
         Recall = (Intersection of prediction and target_list) / len(target_list)
         """
-        if isinstance(pred, str):
-            pred = parse_string_to_sg(pred)
+        assert isinstance(pred, list), "Prediction must be a list of triplets"
         pred_list = self.__sg_list_to_lower_key__(pred)
         target_list = self.__sg_list_to_lower_key__(target_list)
         # Calculate intersection
@@ -55,7 +54,7 @@ class Metrics:
             recall = intersection_count / len(target_list)
         return recall
 
-    def calculate_precision(self, pred: str | List, target_list: List) -> float:
+    def calculate_precision(self, pred: List, target_list: List) -> float:
         """
         Calculate precision for a single prediction.
         :param pred: Prediction in string or list format.
@@ -63,8 +62,7 @@ class Metrics:
         :return: Precision
         Precision = (Intersection of prediction and target_list) / len(prediction)
         """
-        if isinstance(pred, str):
-            pred = parse_string_to_sg(pred)
+        assert isinstance(pred, list), "Prediction must be a list of triplets"
         pred_list = self.__sg_list_to_lower_key__(pred)
         target_list = self.__sg_list_to_lower_key__(target_list)
         # Calculate intersection
@@ -77,15 +75,14 @@ class Metrics:
             precision = intersection_count / len(pred_list)
         return precision
 
-    def get_tp_fp_fn(self, pred: str | List, target_list: List) -> Tuple[int, int, int]:
+    def get_tp_fp_fn(self, pred: List, target_list: List) -> Tuple[int, int, int]:
         """
         Get True Positives (TP), False Positives (FP), and False Negatives (FN) for a single prediction.
         :param pred: Prediction in string or list format.
         :param target_list: Target in list format.
         :return: Precision
         """
-        if isinstance(pred, str):
-            pred = parse_string_to_sg(pred)
+        assert isinstance(pred, list), "Prediction must be a list of triplets"
         pred_list = self.__sg_list_to_lower_key__(pred)
         target_list = self.__sg_list_to_lower_key__(target_list)
         # Calculate intersection
@@ -100,20 +97,21 @@ class Metrics:
     def __calculate_f1_with_precision_recall(self, precision: float, recall: float) -> float:
         return 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
 
-    def __calculate_f1_with_pred_target(self, pred: str, target_list: List) -> float:
+    def __calculate_f1_with_pred_target(self, pred: List, target_list: List) -> float:
         precision = self.calculate_precision(pred, target_list)
         recall = self.calculate_recall(pred, target_list)
         return self.__calculate_f1_with_precision_recall(precision, recall)
 
     def calculate_f1(self, *args, **kwargs) -> float:
-        if (len(args) == 2 and (isinstance(args[0], str) or isinstance(args[0], list))
-                and isinstance(args[1], list)) or \
+        if (len(args) == 2 and isinstance(args[0], list) and isinstance(args[1], list)) or \
                 (len(kwargs) == 2 and 'pred' in kwargs and 'target' in kwargs):
             if len(args) == 2:
                 pred, target = args
             else:
                 pred = kwargs['pred']
                 target = kwargs['target']
+                assert isinstance(pred, list), "Prediction must be a list of triplets"
+                assert isinstance(target, list), "Target must be a list of triplets"
             return self.__calculate_f1_with_pred_target(pred, target)
         elif (len(args) == 2 and isinstance(args[0], float) and isinstance(args[1], float)) or \
                 (len(kwargs) == 2 and 'precision' in kwargs and 'recall' in kwargs):
@@ -122,11 +120,13 @@ class Metrics:
             else:
                 precision = kwargs['precision']
                 recall = kwargs['recall']
+                assert isinstance(precision, float), "Precision must be a float"
+                assert isinstance(recall, float), "Recall must be a float"
             return self.__calculate_f1_with_precision_recall(precision, recall)
         else:
             raise ValueError("Invalid arguments provided: " + str(args) + str(kwargs))
 
-    def update_heatmaps(self, pred: str | List, target_list: List) -> None:
+    def update_heatmaps(self, pred: List, target_list: List) -> None:
         """
         Update precision and recall heatmaps.
         :param pred: Prediction in string or list format.
@@ -134,8 +134,7 @@ class Metrics:
         """
         if self.precision_heatmap is None or self.recall_heatmap is None:
             return
-        if isinstance(pred, str):
-            pred = parse_string_to_sg(pred)
+        assert isinstance(pred, list), "Prediction must be a list of triplets"
         pred_list = self.__sg_list_to_lower_key__(pred)
         target_list = self.__sg_list_to_lower_key__(target_list)
         for target in set(target_list):
@@ -148,14 +147,13 @@ class Metrics:
                 count_triplet_in_gt if count_triplet_in_gt > 0 else 0
             self.count_matrix.loc[target[1], target[0]] += 1
 
-    def calculate_metrics(self, pred: str, target_list: List) -> Tuple[float, float, float]:
+    def calculate_metrics(self, pred_list: List, target_list: List) -> Tuple[float, float, float, int, int, int]:
         """
         Calculate recall and precision for a single prediction.
         :param pred: Prediction in string format.
         :param target_list: Target in list format.
         """
         self.samples_count += 1
-        pred_list = parse_string_to_sg(pred)
         recall = self.calculate_recall(pred_list, target_list)
         self.total_recall += recall
         precision = self.calculate_precision(pred_list, target_list)
@@ -167,7 +165,7 @@ class Metrics:
         self.total_fp += fp
         self.total_fn += fn
         self.update_heatmaps(pred_list, target_list)
-        return recall, precision, f1
+        return recall, precision, f1, tp, fp, fn
 
     def get_avg_recall(self) -> float:
         assert self.samples_count > 0, "At least one sample is required"
@@ -181,14 +179,15 @@ class Metrics:
         assert self.samples_count > 0, "At least one sample is required"
         return self.total_f1 / self.samples_count
 
-    def get_weighted_avg_f1(self) -> float:
+    def get_micro_avg_f1(self) -> float:
         assert (self.total_tp + self.total_fp + self.total_fn) > 0, "One of TP, FP, and FN must be greater than 0"
-        return (self.total_tp * 2) / ((self.total_tp * 2) + self.total_fp + self.total_fn)
+        return self.total_tp / (self.total_tp + 0.5 * (self.total_fp + self.total_fn))
 
     def plot_heatmaps(self, out_path: str | Path | None = None) -> None:
         if self.precision_heatmap is None or self.recall_heatmap is None:
             return
         _, axes = plt.subplots(1, 2, figsize=(20, 10))
+        assert isinstance(axes, np.ndarray), "Axes must be a numpy array"
         aux_count_matrix = self.count_matrix.replace(0, 1, inplace=False)
         mask_matrix = self.count_matrix == 0
         avg_p_heatmap = self.precision_heatmap / aux_count_matrix

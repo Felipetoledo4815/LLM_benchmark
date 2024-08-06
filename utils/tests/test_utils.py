@@ -1,5 +1,5 @@
 import unittest
-from utils.utils import parse_string_to_sg
+from utils.query_mode import parse_string_to_sg
 
 class TestUtils(unittest.TestCase):
 
@@ -35,6 +35,16 @@ class TestUtils(unittest.TestCase):
         pred = "[\n(car, inFrontOf, ego),\n(cat, inFron"
         sg = parse_string_to_sg(pred)
         target = [("car", "inFrontOf", "ego")]
+        self.assertEqual(sg, target)
+        # Test partially incorrect input
+        pred = "[('truck', 'within_25m', 'ego')]"
+        sg = parse_string_to_sg(pred)
+        target = [("truck", "within_25m", "ego")]
+        self.assertEqual(sg, target)
+        # Test partially incorrect input
+        pred = '[("truck", "within_25m", "ego")]'
+        sg = parse_string_to_sg(pred)
+        target = [("truck", "within_25m", "ego")]
         self.assertEqual(sg, target)
 
         # Test with incorrect input

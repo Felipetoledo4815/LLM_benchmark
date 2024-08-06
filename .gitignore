@@ -167,3 +167,6 @@ models
 real_images
 dev_files
 logs
+LLM_SRP
+prompts/prompts_old.py
+external_code/*

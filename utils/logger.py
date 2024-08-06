@@ -15,9 +15,13 @@ class Logger:
             f.write(f"Datasets used: {', '.join(self.datasets_used)}\n\n")
 
     def log_sample(self, prediction: str,
-                   ground_truth: str,
+                   parsed_prediction: List[Tuple[str,str,str]],
+                   ground_truth: List[Tuple[str,str,str]],
                    image_id: int,
                    metrics: Tuple[float, float, float],
+                   tp: int,
+                   fp: int,
+                   fn: int,
                    time: float | None = None) -> None:
         ground_truth_string = " [\n"+',\n'.join(['('+', '.join(item)+')' for item in ground_truth])+"\n]"
         log_entry = (f'image_id={image_id}\n' +
@@ -25,7 +29,11 @@ class Logger:
                     f'recall={metrics[0]:.3f}\n' +
                     f'precision={metrics[1]:.3f}\n' +
                     f'f1={metrics[2]:.3f}\n' +
+                    f'tp={tp}\n' +
+                    f'fp={fp}\n' +
+                    f'fn={fn}\n' +
                     f'prediction={prediction}\n' +
+                    f'parsed_prediction={parsed_prediction}\n' +
                     f'ground_truth={ground_truth_string}\n\n' +
                     '---\n\n')
         with open(self.log_folder / "log.txt", 'a', encoding='utf-8') as f:
@@ -39,7 +47,10 @@ class Logger:
             f.write(f'Average recall: {metrics.get_avg_recall():.3f}\n')
             f.write(f'Average precision: {metrics.get_avg_precision():.3f}\n')
             f.write(f'Macro Average F1: {metrics.get_macro_avg_f1():.3f}\n')
-            f.write(f'Weighted Average F1: {metrics.get_weighted_avg_f1():.3f}\n')
+            f.write(f'Micro Average F1: {metrics.get_micro_avg_f1():.3f}\n')
+            f.write(f"Total TP: {metrics.total_tp}\n")
+            f.write(f"Total FP: {metrics.total_fp}\n")
+            f.write(f"Total FN: {metrics.total_fn}\n")
 
     def get_log_folder(self) -> Path:
         return self.log_folder

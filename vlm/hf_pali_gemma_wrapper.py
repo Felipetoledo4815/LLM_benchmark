@@ -1,9 +1,10 @@
 from typing import List, Tuple
+from time import time
 from transformers import AutoProcessor, PaliGemmaForConditionalGeneration, BitsAndBytesConfig
 from PIL import Image
-from time import time
 import torch
 from vlm.vlm_interface import VLMInterface
+from utils.prompt_formatter import pali_gemma_formatter
 
 
 class HFPaliGemma(VLMInterface):
@@ -15,7 +16,7 @@ class HFPaliGemma(VLMInterface):
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.float16,
         )
-        self.model = PaliGemmaForConditionalGeneration.from_pretrained(
+        model = PaliGemmaForConditionalGeneration.from_pretrained(
             model_name,
             cache_dir=cache_dir,
             quantization_config=self.quantization_config,
@@ -23,11 +24,16 @@ class HFPaliGemma(VLMInterface):
             low_cpu_mem_usage=True,
             use_auth_token=True
         )
+        if isinstance(model, PaliGemmaForConditionalGeneration):
+            self.model = model
+        else:
+            raise ValueError("Model is not an instance of PaliGemmaForConditionalGeneration.")
 
-    def inference(self, prompts: List[str], images: List[str]) -> Tuple[str, float]:
+    def inference(self, prompt: str, images: List[str], **kwargs) -> Tuple[str, float]:
+        assert len(images) == 1, "PaliGemma model only supports one image at a time."
         image = Image.open(images[0])
 
-        message = prompts[0]
+        message = self.parse_prompt(prompt, images)
 
         start = time()
         inputs = self.processor(message, image, return_tensors="pt")
@@ -37,3 +43,6 @@ class HFPaliGemma(VLMInterface):
         end = time()
 
         return output_str, end - start
+
+    def parse_prompt(self, prompt: str, images: List[str], **kwargs) -> str:
+        return pali_gemma_formatter(prompt, images)
