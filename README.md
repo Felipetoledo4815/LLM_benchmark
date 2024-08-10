@@ -1,8 +1,5 @@
 # LLM_benchmark
 
-## Download models
-Please follow the instructions in this [README](./models/README.md).
-
 ## Getting Started
 1. Create a conda environment
 ```bash
@@ -16,7 +13,7 @@ conda activate llm_benchmark
 ```bash
 pip install -r requirements.txt
 ```
-4. Download the dataset [LLM_SRP](https://github.com/Felipetoledo4815/LLM_SRP)
+4. Download the dataset [LLM_SRP](https://github.com/Felipetoledo4815/LLM_SRP). Make sure it is cloned inside this directory.
 ```bash
 git clone git@github.com:Felipetoledo4815/LLM_SRP.git
 ```
@@ -25,6 +22,9 @@ git clone git@github.com:Felipetoledo4815/LLM_SRP.git
 ```bash
 pip install -e .
 ```
+
+## Download models
+Please follow the instructions in this [README](./models/README.md).
 
 ## Prompt engineering
 There is a python module called `./tests/run_prompt_engineering.py` that can be used to generate prompts for the models. Essentially, this module loads a model and a mode in memory, and takes in a text file path, where you can update the prompt, and after clicking enter, the model will use the updated prompt from the text file to generate the output. The module can be used by running:

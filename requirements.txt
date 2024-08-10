@@ -35,7 +35,6 @@ fastapi-cli==0.0.4
 ffmpy==0.3.2
 filelock==3.14.0
 fire==0.6.0
-flash-attn==2.3.2
 fonttools==4.51.0
 frozenlist==1.4.1
 fsspec==2024.3.1
@@ -66,11 +65,9 @@ linkify-it-py==2.0.3
 lit==18.1.8
 llama_cpp_python==0.2.79
 llamacpp==0.1.14
-llava-torch==1.2.2.post1
 markdown-it-py==2.2.0
 markdown2==2.4.8
 MarkupSafe==2.1.5
-matplotlib==3.9.1
 matplotlib-inline==0.1.7
 mdit-py-plugins==0.3.3
 mdurl==0.1.2
@@ -148,7 +145,6 @@ scikit-learn==1.2.2
 scipy==1.14.0
 seaborn==0.13.2
 semantic-version==2.10.0
-sentencepiece==0.1.99
 setuptools==68.2.2
 Shapely==1.8.5.post1
 shellingham==1.5.4
