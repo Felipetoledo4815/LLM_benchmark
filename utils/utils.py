@@ -1,3 +1,4 @@
+from pathlib import Path
 from prompts.all_prompts import EVALUATION_PROMPTS
 from vlm.vlm_interface import VLMInterface
 from vlm.space_llava_wrapper import SpaceLlavaWrapper
@@ -17,9 +18,11 @@ def get_prompt(mode: str, model: str, shot: str):
     return prompt
 
 
-def get_model(model_name: str) -> VLMInterface:
+def get_model(model_name: str, lora=Path) -> VLMInterface:
     if model_name == 'llava_1.5':
         vlm = HFLlavaWrapper("llava-hf/llava-1.5-7b-hf", cache_dir="./models/llava-1.5-7b-hf")
+    elif model_name == 'llava_1.5_ft':
+        vlm = HFLlavaWrapper("llava-hf/llava-1.5-7b-hf", cache_dir="./models/llava-1.5-7b-hf", lora=lora)
     elif model_name == 'llava_1.6_mistral':
         vlm = HFLlavaNextWrapper("llava-hf/llava-v1.6-mistral-7b-hf", cache_dir="./models/llava-v1.6-mistral-7b-hf")
     elif model_name == 'llava_1.6_vicuna':

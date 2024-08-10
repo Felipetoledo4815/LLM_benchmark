@@ -159,7 +159,7 @@ class Metrics:
         precision = self.calculate_precision(pred_list, target_list)
         self.total_precision += precision
         f1 = self.calculate_f1(precision, recall)
-        self.total_f1 = f1
+        self.total_f1 += f1
         tp, fp, fn = self.get_tp_fp_fn(pred_list, target_list)
         self.total_tp += tp
         self.total_fp += fp

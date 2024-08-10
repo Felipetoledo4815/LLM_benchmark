@@ -68,7 +68,6 @@ def llama_cpp_formatter(prompt: str, images: List[str], img_parser: Callable, re
             first_part = user_message_text.split("||$*IMAGE*$||")[0]
             second_part = user_message_text.split("||$*IMAGE*$||")[1]
 
-        #TODO: check spaceLlava and PROMPTS
         user_message = {
             "role": "user",
             "content": [
@@ -146,53 +145,58 @@ def hf_llava_formatter(prompt: str, images: List[str], model_v: str, rel_questio
     return message, images_to_load
 
 
-def flamingo_formatter(prompt: str, images: List[str]) -> Tuple[str, List[str]]:
-    # check_prompt_consistency(prompt, images)
-    # count_system_message = prompt.count("||$*SYSTEM*$||")
-    # assert count_system_message == 0, "Flamingo does not support system messages for few shot learning. \
-    #     However, it supports in-context learning."
-    # message = ""
+def flamingo_formatter(prompt: str, images: List[str], rel_questions: List[str]) -> Tuple[str, List[str]]:
+    check_prompt_consistency(prompt, images, rel_questions)
+    count_system_message = prompt.count("||$*SYSTEM*$||")
+    assert count_system_message == 0, "Flamingo does not support system messages for few shot learning. \
+        However, it supports in-context learning."
+    message = ""
 
-    # images_to_load = []
-    # for _, user_message_text in enumerate(prompt.split("||$*USER*$||")[1:]):
-    #     user_message_text = user_message_text.split("||$*USER-END*$||")[0]
+    images_to_load = []
+    for _, user_message_text in enumerate(prompt.split("||$*USER*$||")[1:]):
+        user_message_text = user_message_text.split("||$*USER-END*$||")[0]
+        ### Relationship Questions
+        if user_message_text.count("||$*REL_QUESTION*$||") == 1:
+            user_message_text = user_message_text.replace("||$*REL_QUESTION*$||", rel_questions.pop(0))
+        # Images
+        if user_message_text.count("||$*IMAGE:") == 1:
+            img_path = user_message_text.split("||$*IMAGE:")[1].split("*$||")[0]
+            images_to_load.append(img_path.strip())
+            first_part = user_message_text.split("||$*IMAGE:")[0]
+            second_part = user_message_text.split("||$*IMAGE:")[1].split("*$||")[1]
+            message += f"{first_part} <image> {second_part}<|endofchunk|>"
+        else:
+            first_part = user_message_text.split("||$*IMAGE*$||")[0]
+            second_part = user_message_text.split("||$*IMAGE*$||")[1]
+            message += f"{first_part} <image> {second_part}"
 
-    #     if user_message_text.count("||$*IMAGE:") == 1:
-    #         img_path = user_message_text.split("||$*IMAGE:")[1].split("*$||")[0]
-    #         images_to_load.append(img_path.strip())
-    #         first_part = user_message_text.split("||$*IMAGE:")[0]
-    #         second_part = user_message_text.split("||$*IMAGE:")[1].split("*$||")[1]
-    #         message += f"{first_part} <image> {second_part}<|endofchunk|>"
-    #     else:
-    #         first_part = user_message_text.split("||$*IMAGE*$||")[0]
-    #         second_part = user_message_text.split("||$*IMAGE*$||")[1]
-    #         message += f"{first_part} <image> {second_part}"
-
-    # return message, images_to_load
-    #TODO: Implement
-    raise NotImplementedError("Flamingo formatter is not implemented.")
+    return message, images_to_load
+    # raise NotImplementedError("Flamingo formatter is not implemented.")
 
 
-def pali_gemma_formatter(prompt: str, images: List[str]) -> str:
-    # check_prompt_consistency(prompt, images)
-    # count_system_message = prompt.count("||$*SYSTEM*$||")
-    # assert count_system_message == 0, "PaliGemma does not support system messages for few shot learning."
-    # count_user_message = prompt.count("||$*USER*$||")
-    # assert count_user_message == 1, "PaliGemma expects only one user message."
-    # message = ""
+def pali_gemma_formatter(prompt: str, images: List[str], rel_questions: List[str]) -> str:
+    check_prompt_consistency(prompt, images, rel_questions)
+    # Pali Gemma checks
+    count_system_message = prompt.count("||$*SYSTEM*$||")
+    assert count_system_message == 0, "PaliGemma does not support system messages for few shot learning."
+    count_images = prompt.count("||$*IMAGE:")
+    assert count_images == 0, "PaliGemma does not support multiple images for few shot learning."
+    count_user_message = prompt.count("||$*USER*$||")
+    assert count_user_message == 1, "PaliGemma expects only one user message."
 
-    # # Retrieve user message
-    # user_message_text = prompt.split("||$*USER*$||")[1]
-    # user_message_text = user_message_text.split("||$*USER-END*$||")[0]
+    message = ""
+    # Retrieve user message
+    user_message_text = prompt.split("||$*USER*$||")[1]
+    user_message_text = user_message_text.split("||$*USER-END*$||")[0]
+    # Relationship Questions
+    if user_message_text.count("||$*REL_QUESTION*$||") == 1:
+        user_message_text = user_message_text.replace("||$*REL_QUESTION*$||", rel_questions.pop(0))
+    # Remove image placeholder
+    first_part = user_message_text.split("||$*IMAGE*$||")[0]
+    second_part = user_message_text.split("||$*IMAGE*$||")[1]
+    message += f"{first_part}{second_part}"
 
-    # # Remove image placeholder
-    # first_part = user_message_text.split("||$*IMAGE*$||")[0]
-    # second_part = user_message_text.split("||$*IMAGE*$||")[1]
-    # message += f"{first_part}{second_part}"
-
-    # return message
-    #TODO: Implement
-    raise NotImplementedError("PaliGemma formatter is not implemented.")
+    return message
 
 
 def mobile_vlm_formatter(prompt: str, images: List[str], rel_questions: List[str]) -> Tuple[str, List[str]]:

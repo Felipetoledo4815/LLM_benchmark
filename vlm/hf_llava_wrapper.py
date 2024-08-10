@@ -1,6 +1,7 @@
 from typing import List, Tuple
 from time import time
 from transformers import AutoProcessor, LlavaForConditionalGeneration, BitsAndBytesConfig
+from peft.peft_model import PeftModel
 from PIL import Image
 import torch
 from vlm.vlm_interface import VLMInterface
@@ -8,7 +9,7 @@ from utils.prompt_formatter import hf_llava_formatter
 
 
 class HFLlavaWrapper(VLMInterface):
-    def __init__(self, model_name: str, cache_dir: str | None = None) -> None:
+    def __init__(self, model_name: str, cache_dir: str | None = None, **kwargs) -> None:
         self.model_name = model_name.split('/')[-1]
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.processor = AutoProcessor.from_pretrained(model_name)
@@ -24,10 +25,12 @@ class HFLlavaWrapper(VLMInterface):
             device_map="auto",
             low_cpu_mem_usage=True
         )
-        if isinstance(model, LlavaForConditionalGeneration):
+        if "lora" in kwargs.keys():
+            model = PeftModel.from_pretrained(model, kwargs["lora"], is_trainable=False)
+        if isinstance(model, LlavaForConditionalGeneration) or isinstance(model, PeftModel):
             self.model = model
         else:
-            raise ValueError("Model is not an instance of LlavaForConditionalGeneration.")
+            raise ValueError("Model is not an instance of LlavaForConditionalGeneration or PeftModel.")
 
     def inference(self, prompt: str, images: List[str], **kwargs) -> Tuple[str, float]:
         pil_images = []

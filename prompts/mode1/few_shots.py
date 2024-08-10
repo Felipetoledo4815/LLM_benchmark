@@ -302,6 +302,7 @@ Using the above prompt format, please analyze the following image and generate t
 ||$*USER-END*$||\
 """
 
+#TODO: Implement the following prompt
 FLAMINGO_M1_TWO_SHOT_PROMPT = \
 """\
 ||$*USER*$||\

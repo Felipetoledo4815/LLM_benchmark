@@ -57,3 +57,20 @@ Using the above prompt format, please analyze the following image and generate t
 ||$*IMAGE*$||\
 ||$*USER-END*$||\
 """
+
+LLAVA_FT_M1_ZERO_SHOT_PROMPT = \
+"""\
+||$*USER*$||\
+||$*IMAGE*$||
+Give me the triplets.\
+||$*USER-END*$||\
+"""
+
+#TODO: Implement the following prompt
+PALIGEMMA_M1_ZERO_SHOT_PROMPT = \
+"""\
+||$*USER*$||\
+||$*IMAGE*$||\
+What do you see?\
+||$*USER-END*$||\
+"""

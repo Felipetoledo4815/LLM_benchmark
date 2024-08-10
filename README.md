@@ -1,13 +1,16 @@
 # LLM_benchmark
 
+## Download models
+Please follow the instructions in this [README](./models/README.md).
+
 ## Getting Started
 1. Create a conda environment
 ```bash
-conda create -n LLM_benchmark python=3.10
+conda create -n llm_benchmark python=3.10
 ```
 2. Activate the environment
 ```bash
-conda activate LLM_benchmark
+conda activate llm_benchmark
 ```
 3. Install the requirements
 ```bash
@@ -22,3 +25,10 @@ git clone git@github.com:Felipetoledo4815/LLM_SRP.git
 ```bash
 pip install -e .
 ```
+
+## Prompt engineering
+There is a python module called `./tests/run_prompt_engineering.py` that can be used to generate prompts for the models. Essentially, this module loads a model and a mode in memory, and takes in a text file path, where you can update the prompt, and after clicking enter, the model will use the updated prompt from the text file to generate the output. The module can be used by running:
+```bash
+python -m tests.run_prompt_engineering --model llava_1.5 --mode 2 --prompt_path ./tests/prompt.txt
+```
+Note that the module will first load whatever is in the text file, used it as a prompt for the specified mode, and generate the results. After the results are generated, the module will wait for you to update the prompt in the text file, and press enter to generate the next results.

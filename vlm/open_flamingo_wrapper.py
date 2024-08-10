@@ -30,7 +30,7 @@ class OpenFlamingo(VLMInterface):
 
     def inference(self, prompt: str, images: List[str], **kwargs) -> Tuple[str, float]:
 
-        message, images_to_load = self.parse_prompt(prompt, images)
+        message, images_to_load = self.parse_prompt(prompt, images, **kwargs)
 
         # Step 1: Load images
         pil_images = []
@@ -80,4 +80,6 @@ class OpenFlamingo(VLMInterface):
         return response_str, end - start
 
     def parse_prompt(self, prompt: str, images: List[str], **kwargs) -> Tuple[str, List[str]]:
-        return flamingo_formatter(prompt, images)
+        rel_questions = kwargs.get("rel_questions", [])
+        assert isinstance(rel_questions, list), "Relationship questions need to be a list."
+        return flamingo_formatter(prompt, images, rel_questions)

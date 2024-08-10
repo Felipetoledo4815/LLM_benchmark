@@ -163,7 +163,8 @@ cython_debug/
 
 # Custom
 .vscode
-models
+models/*
+!models/README.md
 real_images
 dev_files
 logs
