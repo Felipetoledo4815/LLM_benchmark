@@ -20,7 +20,8 @@ NUMBER_WORDS = {
 MODEL_NAMES = {
     "llava_1.6_mistral": "Llava 1.6 Mistral",
     "spacellava": "SpaceLlava",
-    "llava_1.5": "Llava 1.5"
+    "llava_1.5": "Llava 1.5",
+    "llava_1.5_ft": "Llava 1.5 FT"
 }
 
 

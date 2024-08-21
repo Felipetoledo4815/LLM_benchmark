@@ -28,7 +28,8 @@ def main():
                                  'llava_1.6_vicuna', "paligemma", "openflamingo"],
                         default='llava_1.5', help='Model to use for inference.')
     parser.add_argument("--lora", type=Path, default=None, help='Path to the LoRA model.')
-    parser.add_argument("--mode", type=str, choices=['1', '2'], default='1', help='Mode to use for inference.')
+    parser.add_argument("--mode", type=str, choices=['1', '2', '3', '4'],
+                        default='1', help='Mode to use for inference.')
     parser.add_argument("--shot", type=str, choices=['zero', 'one', 'two'], default='zero',
                         help='Number of shots to use for inference.')
     args = parser.parse_args()
@@ -43,19 +44,19 @@ def main():
 
     vlm = get_model(args.model, args.lora)
     mode = QueryMode(args.mode, vlm, llm_srp_dataset.get_entity_names(),
-                                llm_srp_dataset.get_relationship_names())
+                     llm_srp_dataset.get_relationship_names())
 
     total_time = 0
     random.seed(0)
 
     for _ in tqdm(range(args.nr_images)):
         r_n = random.randint(0, len(llm_srp_dataset) - 1)
-        img_path, triplets, _ = llm_srp_dataset[r_n]
+        img_path, triplets, bboxes = llm_srp_dataset[r_n]
 
         assert isinstance(img_path, str), "Image path needs to be a string."
 
         prompt = get_prompt(args.mode, args.model, args.shot)
-        llm_output, predicted_triplets, time_per_image = mode.query(prompt, [img_path])
+        llm_output, predicted_triplets, time_per_image = mode.query(prompt, [img_path], bboxes)
 
         total_time += time_per_image
         recall, precision, f1, tp, fp, fn = metrics.calculate_metrics(predicted_triplets, triplets)

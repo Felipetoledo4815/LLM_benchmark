@@ -4,6 +4,8 @@ from prompts.mode1.few_shots import LLAVA_M1_ONE_SHOT_PROMPT, LLAVA_M1_TWO_SHOTS
 from prompts.mode2.zero_shot import LLAVA_M2_ZERO_SHOT_PROMPT, SPACELLAVA_M2_ZERO_SHOT_PROMPT, \
     MOBILEVLM_M2_ZERO_SHOT_PROMPT, PALIGEMMA_M2_ZERO_SHOT_PROMPT
 from prompts.mode2.few_shot import LLAVA_M2_ONE_SHOT_PROMPT, SPACELLAVA_M2_ONE_SHOT_PROMPT, FLAMINGO_M2_TWO_SHOTS_PROMPT
+from prompts.mode3.zero_shot import LLAVA_M3_ZERO_SHOT_PROMPT
+from prompts.mode4.zero_shot import LLAVA_M4_ZERO_SHOT_PROMPT
 
 EVALUATION_PROMPTS = {
     "llava_1.5": {
@@ -13,6 +15,12 @@ EVALUATION_PROMPTS = {
         },
         "mode2": {
             "zero": LLAVA_M2_ZERO_SHOT_PROMPT
+        },
+        "mode3": {
+            "zero": LLAVA_M3_ZERO_SHOT_PROMPT
+        },
+        "mode4": {
+            "zero": LLAVA_M4_ZERO_SHOT_PROMPT
         }
     },
     "llava_1.5_ft": {
@@ -32,6 +40,12 @@ EVALUATION_PROMPTS = {
         "mode2": {
             "zero": LLAVA_M2_ZERO_SHOT_PROMPT,
             "one": LLAVA_M2_ONE_SHOT_PROMPT
+        },
+        "mode3": {
+            "zero": LLAVA_M3_ZERO_SHOT_PROMPT
+        },
+        "mode4": {
+            "zero": LLAVA_M4_ZERO_SHOT_PROMPT
         }
     },
     "spacellava": {
@@ -43,6 +57,12 @@ EVALUATION_PROMPTS = {
         "mode2": {
             "zero": SPACELLAVA_M2_ZERO_SHOT_PROMPT,
             "one": SPACELLAVA_M2_ONE_SHOT_PROMPT
+        },
+        "mode3": {
+            "zero": LLAVA_M3_ZERO_SHOT_PROMPT
+        },
+        "mode4": {
+            "zero": LLAVA_M4_ZERO_SHOT_PROMPT
         }
     },
     "mobilevlm": {
