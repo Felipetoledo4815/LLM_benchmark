@@ -21,6 +21,7 @@ MODEL_NAMES = {
     "llava_1.6_mistral": "Llava 1.6 Mistral",
     "spacellava": "SpaceLlava",
     "llava_1.5": "Llava 1.5",
+    "llava_1.5_ft_v1": "Llava 1.5 FT v1",
     "llava_1.5_ft": "Llava 1.5 FT"
 }
 
@@ -61,6 +62,7 @@ def main():
             data.append(summary)
 
     df = pd.DataFrame(data)
+    df["Macro Average F1"] = 2 * ( (df["Average recall"] * df["Average precision"]) / (df["Average recall"] + df["Average precision"]) )
 
     print("\nTable\n")
     df = df.sort_values(by=['mode', 'model_name', 'shot'])
@@ -71,7 +73,7 @@ def main():
                             "Average time per prediction": "\\makecell{Avg time \\\\ prediction}",
                             "Average recall": "\\makecell{Avg \\\\ recall}",
                             "Average precision": "\\makecell{Avg \\\\ precision}",
-                            "Macro Average F1": "\\makecell{Macro \\\\ Avg F1}",
+                            "Macro Average F1": "\\makecell{Avg F1}",
                             "Micro Average F1": "\\makecell{Micro \\\\ Avg F1}",
                             "Total TP": "TP",
                             "Total FP": "FP",
