@@ -25,7 +25,7 @@ def main():
     parser.add_argument('--log_folder', type=Path, default='./logs/test/', help='Log file to store the results.')
     parser.add_argument("--model", type=str,
                         choices=['spacellava', 'llava_1.5', 'llava_1.5_ft', 'llava_1.6_mistral',
-                                 'llava_1.6_vicuna', "paligemma", "openflamingo"],
+                                 'llava_1.6_vicuna', "paligemma", "openflamingo", "roadscene2vec"],
                         default='llava_1.5', help='Model to use for inference.')
     parser.add_argument("--lora", type=Path, default=None, help='Path to the LoRA model.')
     parser.add_argument("--mode", type=str, choices=['1', '2', '3', '4'],

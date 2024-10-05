@@ -1,0 +1,9 @@
+{
+    "proj_ratio": 5,
+    "height": 900,
+    "width": 1600,
+    "cropped_height": 349,
+    "horizon_height": 900,
+    "yscale": 0.091,
+    "xscale": 0.055
+}

@@ -165,6 +165,7 @@ cython_debug/
 .vscode
 models/*
 !models/README.md
+!models/roadscene2vec
 real_images
 dev_files
 logs

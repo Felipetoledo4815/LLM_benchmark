@@ -8,8 +8,12 @@ from vlm.hf_llava_next_wrapper import HFLlavaNextWrapper
 from vlm.hf_llava_wrapper import HFLlavaWrapper
 from vlm.hf_pali_gemma_wrapper import HFPaliGemma
 from vlm.open_flamingo_wrapper import OpenFlamingo
+from vlm.roadscene2vec_wrapper import RoadScene2Vec
 
 def get_prompt(mode: str, model: str, shot: str):
+    if model == 'roadscene2vec':
+        #TODO: This should not be a VLMInterface, it should be a SGG that does not need prompt
+        return "No prompt needed for RoadScene2Vec."
     try:
         prompt = EVALUATION_PROMPTS[model][f"mode{mode}"][shot]
     except KeyError as exc:
@@ -39,6 +43,8 @@ def get_model(model_name: str, lora=Path) -> VLMInterface:
         vlm = HFPaliGemma("google/paligemma-3b-mix-448", cache_dir="./models/paligemma-3b-mix-448")
     elif model_name == 'openflamingo':
         vlm = OpenFlamingo("openflamingo/OpenFlamingo-3B-vitl-mpt1b", cache_dir="./models/OpenFlamingo-3B-vitl-mpt1b")
+    elif model_name == 'roadscene2vec':
+        vlm = RoadScene2Vec("./models/roadscene2vec/config.yaml")
     else:
         raise ValueError(f"Unknown model {model_name}.")
     return vlm
