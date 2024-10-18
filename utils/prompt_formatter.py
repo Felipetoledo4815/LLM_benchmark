@@ -226,3 +226,15 @@ def mobile_vlm_formatter(prompt: str, images: List[str], rel_questions: List[str
     message += "ASSISTANT:"
 
     return message, images_to_load
+
+def gpt_formatter(prompt: str, images: List[str], rel_questions: List[str]) -> Tuple[str, List[str]]:
+    # check_prompt_consistency(prompt, images, rel_questions)
+    # Just adding REL_QUESTION related chk from check_prompt_consistency() here as we are not passing ||$*USER*$|| or ||$*IMAGE*$|| in GPT prompts as of now
+    count_rel_question_placeholders = prompt.count("||$*REL_QUESTION*$||")
+    assert count_rel_question_placeholders == len(rel_questions), "Number of relationship questions does not match the number of placeholders."
+
+    user_message_text=prompt
+    if user_message_text.count("||$*REL_QUESTION*$||") == 1:
+            user_message_text = user_message_text.replace("||$*REL_QUESTION*$||", rel_questions.pop(0))
+
+    return user_message_text

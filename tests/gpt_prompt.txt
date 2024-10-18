@@ -1,4 +1,3 @@
-||$*USER*$||
 ### Definitions:
 1. **ego**: The vehicle holding the camera and capturing the scene (not visible in the image).
 2. **OBJECT**: Refers to one of the following:
@@ -52,5 +51,3 @@ Given an image with one bus and one car, the output should be:
 
 ### Image Analysis:
 Using the above prompt format, please analyze the following image and generate the output according to the template, ensuring only visible, identifiable, and relevant objects are included:
-||$*IMAGE*$||
-||$*USER-END*$||

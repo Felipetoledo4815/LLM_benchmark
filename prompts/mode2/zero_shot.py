@@ -40,3 +40,11 @@ If yes, how many times it is?
 Answer from 1 to 10, for example: 'yes. 3' or 'yes. 1'
 ||$*USER-END*$||\
 """
+
+GPT_M2_ZERO_SHOT_PROMPT = \
+"""\
+Is there a ||$*REL_QUESTION*$||?
+Answer yes/no.
+If yes, how many times it is?
+Answer from 1 to 10, for example: 'yes. 3' or 'yes. 1'
+"""

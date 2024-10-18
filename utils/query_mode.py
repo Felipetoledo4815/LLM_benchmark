@@ -5,7 +5,6 @@ import os
 import cv2
 from vlm.vlm_interface import VLMInterface
 
-
 def parse_string_to_sg(string: str) -> List[Tuple[str, str, str]] | List:
     # Pattern to match tuples like (element, relation, element)
     pattern = r"\(([^,]+), ([^,]+), ([^,]+)\)"

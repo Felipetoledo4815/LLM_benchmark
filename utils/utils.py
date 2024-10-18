@@ -4,10 +4,12 @@ from vlm.vlm_interface import VLMInterface
 from vlm.space_llava_wrapper import SpaceLlavaWrapper
 # from vlm.mobile_vlm_wrapper import MobileVLM
 # from vlm.mobile_vlm2_wrapper import MobileVLM2
-from vlm.hf_llava_next_wrapper import HFLlavaNextWrapper
-from vlm.hf_llava_wrapper import HFLlavaWrapper
-from vlm.hf_pali_gemma_wrapper import HFPaliGemma
-from vlm.open_flamingo_wrapper import OpenFlamingo
+##### Commented the following as it was giving me errors ######
+# from vlm.hf_llava_next_wrapper import HFLlavaNextWrapper
+# from vlm.hf_llava_wrapper import HFLlavaWrapper
+# from vlm.hf_pali_gemma_wrapper import HFPaliGemma
+# from vlm.open_flamingo_wrapper import OpenFlamingo
+from vlm.gpt_wrapper import GPTWrapper
 
 def get_prompt(mode: str, model: str, shot: str):
     try:
@@ -39,6 +41,8 @@ def get_model(model_name: str, lora=Path) -> VLMInterface:
         vlm = HFPaliGemma("google/paligemma-3b-mix-448", cache_dir="./models/paligemma-3b-mix-448")
     elif model_name == 'openflamingo':
         vlm = OpenFlamingo("openflamingo/OpenFlamingo-3B-vitl-mpt1b", cache_dir="./models/OpenFlamingo-3B-vitl-mpt1b")
+    elif model_name == 'gpt':
+        vlm = GPTWrapper(gpt_model_name='gpt-4-turbo')
     else:
         raise ValueError(f"Unknown model {model_name}.")
     return vlm

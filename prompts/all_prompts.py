@@ -1,11 +1,11 @@
 from prompts.mode1.zero_shot import LLAVA_M1_ZERO_SHOT_PROMPT, LLAVA_FT_M1_ZERO_SHOT_PROMPT, \
-    PALIGEMMA_M1_ZERO_SHOT_PROMPT
+    PALIGEMMA_M1_ZERO_SHOT_PROMPT, GPT_M1_ZERO_SHOT_PROMPT
 from prompts.mode1.few_shots import LLAVA_M1_ONE_SHOT_PROMPT, LLAVA_M1_TWO_SHOTS_PROMPT, FLAMINGO_M1_TWO_SHOT_PROMPT
 from prompts.mode2.zero_shot import LLAVA_M2_ZERO_SHOT_PROMPT, SPACELLAVA_M2_ZERO_SHOT_PROMPT, \
-    MOBILEVLM_M2_ZERO_SHOT_PROMPT, PALIGEMMA_M2_ZERO_SHOT_PROMPT
+    MOBILEVLM_M2_ZERO_SHOT_PROMPT, PALIGEMMA_M2_ZERO_SHOT_PROMPT, GPT_M2_ZERO_SHOT_PROMPT
 from prompts.mode2.few_shot import LLAVA_M2_ONE_SHOT_PROMPT, SPACELLAVA_M2_ONE_SHOT_PROMPT, FLAMINGO_M2_TWO_SHOTS_PROMPT
-from prompts.mode3.zero_shot import LLAVA_M3_ZERO_SHOT_PROMPT
-from prompts.mode4.zero_shot import LLAVA_M4_ZERO_SHOT_PROMPT
+from prompts.mode3.zero_shot import LLAVA_M3_ZERO_SHOT_PROMPT, GPT_M3_ZERO_SHOT_PROMPT
+from prompts.mode4.zero_shot import LLAVA_M4_ZERO_SHOT_PROMPT, GPT_M4_ZERO_SHOT_PROMPT
 
 EVALUATION_PROMPTS = {
     "llava_1.5": {
@@ -98,6 +98,20 @@ EVALUATION_PROMPTS = {
         },
         "mode2": {
             "zero": PALIGEMMA_M2_ZERO_SHOT_PROMPT
+        }
+    },
+    "gpt": {
+        "mode1": {
+            "zero": GPT_M1_ZERO_SHOT_PROMPT
+        },
+        "mode2": {
+            "zero": GPT_M2_ZERO_SHOT_PROMPT
+        },
+        "mode3": {
+            "zero": GPT_M3_ZERO_SHOT_PROMPT
+        },
+        "mode4": {
+            "zero": GPT_M4_ZERO_SHOT_PROMPT
         }
     }
 }
