@@ -54,6 +54,20 @@ EVALUATION_PROMPTS = {
             "zero": LLAVA_M4_ZERO_SHOT_PROMPT
         }
     },
+    "llava_1.6_mistral_ft": {
+        "mode1": {
+            "zero": LLAVA_FT_M1_ZERO_SHOT_PROMPT
+        },
+        "mode2": {
+            "zero": LLAVA_M2_ZERO_SHOT_PROMPT
+        },
+        "mode3": {
+            "zero": LLAVA_M3_ZERO_SHOT_PROMPT
+        },
+        "mode4": {
+            "zero": LLAVA_M4_ZERO_SHOT_PROMPT
+        }
+    },
     "spacellava": {
         "mode1": {
             "zero": LLAVA_M1_ZERO_SHOT_PROMPT,

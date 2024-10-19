@@ -29,6 +29,8 @@ def get_model(model_name: str, lora=Path) -> VLMInterface:
         vlm = HFLlavaWrapper("llava-hf/llava-1.5-7b-hf", cache_dir="./models/llava-1.5-7b-hf", lora=lora)
     elif model_name == 'llava_1.6_mistral':
         vlm = HFLlavaNextWrapper("llava-hf/llava-v1.6-mistral-7b-hf", cache_dir="./models/llava-v1.6-mistral-7b-hf")
+    elif model_name == 'llava_1.6_mistral_ft':
+        vlm = HFLlavaNextWrapper("llava-hf/llava-v1.6-mistral-7b-hf", cache_dir="./models/llava-v1.6-mistral-7b-hf", lora=lora)
     elif model_name == 'llava_1.6_vicuna':
         vlm = HFLlavaNextWrapper("llava-hf/llava-v1.6-vicuna-13b-hf", cache_dir="./models/llava-v1.6-vicuna-13b-hf")
     elif model_name == 'spacellava':

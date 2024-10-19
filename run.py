@@ -24,7 +24,7 @@ def main():
     parser.add_argument('--nr_images', type=int, default=10, help='Number of images to use for the benchmark.')
     parser.add_argument('--log_folder', type=Path, default='./logs/test/', help='Log file to store the results.')
     parser.add_argument("--model", type=str,
-                        choices=['spacellava', 'llava_1.5', 'llava_1.5_ft', 'llava_1.6_mistral',
+                        choices=['spacellava', 'llava_1.5', 'llava_1.5_ft', 'llava_1.6_mistral', 'llava_1.6_mistral_ft',
                                  'llava_1.6_vicuna', "paligemma", "openflamingo", "roadscene2vec"],
                         default='llava_1.5', help='Model to use for inference.')
     parser.add_argument("--lora", type=Path, default=None, help='Path to the LoRA model.')
@@ -50,6 +50,7 @@ def main():
     random.seed(0)
 
     for _ in tqdm(range(args.nr_images)):
+        #TODO: Replace this by testing split when all datasets are ready.
         r_n = random.randint(0, len(llm_srp_dataset) - 1)
         img_path, triplets, bboxes = llm_srp_dataset[r_n]
 
@@ -59,7 +60,7 @@ def main():
         llm_output, predicted_triplets, time_per_image = mode.query(prompt, [img_path], bboxes)
 
         total_time += time_per_image
-        recall, precision, f1, tp, fp, fn = metrics.calculate_metrics(predicted_triplets, triplets)
+        recall, precision, f1, tp, fp, fn, metrics_dict = metrics.calculate_metrics(predicted_triplets, triplets)
         logger.log_sample(prediction=llm_output,
                           parsed_prediction=predicted_triplets,
                           ground_truth=triplets,
@@ -68,6 +69,7 @@ def main():
                           tp=tp,
                           fp=fp,
                           fn=fn,
+                          metrics_dict=metrics_dict,
                           time=time_per_image)
 
     metrics.plot_heatmaps(logger.get_log_folder() / "heatmaps.png")

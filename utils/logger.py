@@ -1,6 +1,7 @@
 from typing import Tuple, List
 from pathlib import Path
 import datetime
+import json
 from utils.metrics import Metrics
 
 class Logger:
@@ -13,6 +14,9 @@ class Logger:
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             f.write(f'### Log started at {timestamp} ###\n')
             f.write(f"Datasets used: {', '.join(self.datasets_used)}\n\n")
+        # Delete the metrics file if it exists
+        if (self.log_folder / "metrics.json").exists():
+            (self.log_folder / "metrics.json").unlink()
 
     def log_sample(self, prediction: str,
                    parsed_prediction: List[Tuple[str,str,str]],
@@ -22,6 +26,7 @@ class Logger:
                    tp: int,
                    fp: int,
                    fn: int,
+                   metrics_dict: dict,
                    time: float | None = None) -> None:
         ground_truth_string = " [\n"+',\n'.join(['('+', '.join(item)+')' for item in ground_truth])+"\n]"
         log_entry = (f'image_id={image_id}\n' +
@@ -38,6 +43,21 @@ class Logger:
                     '---\n\n')
         with open(self.log_folder / "log.txt", 'a', encoding='utf-8') as f:
             f.write(log_entry)
+        # Add more information to the metrics_dict
+        metrics_dict['image_id'] = image_id
+        metrics_dict['time'] = time
+        # Save the metrics_dict to a json file
+        metrics_json_path = self.log_folder / "metrics.json"
+        if metrics_json_path.exists():
+            with open(metrics_json_path, 'r', encoding='utf-8') as f:
+                metrics_json = json.load(f)
+            metrics_json.append(metrics_dict)
+            with open(metrics_json_path, 'w', encoding='utf-8') as f:
+                f.write(json.dumps(metrics_json))
+        else:
+            metrics_json = [metrics_dict]
+            with open(self.log_folder / "metrics.json", 'a', encoding='utf-8') as f:
+                f.write(json.dumps(metrics_json))
 
     def log_summary(self, metrics: Metrics, avg_time_spent: float | None = None) -> None:
         with open(self.log_folder / "log.txt", 'a', encoding='utf-8') as f:

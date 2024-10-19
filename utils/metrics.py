@@ -8,6 +8,7 @@ import numpy as np
 
 class Metrics:
     def __init__(self, entity_names: List | None = None, relationship_names: List | None = None) -> None:
+        self.samples_metrics = []
         self.samples_count = 0
         self.total_recall = 0
         self.total_precision = 0
@@ -80,7 +81,7 @@ class Metrics:
         Get True Positives (TP), False Positives (FP), and False Negatives (FN) for a single prediction.
         :param pred: Prediction in string or list format.
         :param target_list: Target in list format.
-        :return: Precision
+        :return: TP, FP, FN
         """
         assert isinstance(pred, list), "Prediction must be a list of triplets"
         pred_list = self.__sg_list_to_lower_key__(pred)
@@ -126,15 +127,16 @@ class Metrics:
         else:
             raise ValueError("Invalid arguments provided: " + str(args) + str(kwargs))
 
-    def update_heatmaps(self, pred: List, target_list: List) -> None:
+    def update_heatmaps(self, pred: List, target_list: List) -> dict:
         """
         Update precision and recall heatmaps.
         :param pred: Prediction in string or list format.
         :param target_list: Target in list format.
         """
         if self.precision_heatmap is None or self.recall_heatmap is None:
-            return
+            return {}
         assert isinstance(pred, list), "Prediction must be a list of triplets"
+        triplets_metrics = {}
         pred_list = self.__sg_list_to_lower_key__(pred)
         target_list = self.__sg_list_to_lower_key__(target_list)
         for target in set(target_list):
@@ -146,26 +148,65 @@ class Metrics:
             self.recall_heatmap.loc[target[1], target[0]] += triplet_tp / \
                 count_triplet_in_gt if count_triplet_in_gt > 0 else 0
             self.count_matrix.loc[target[1], target[0]] += 1
+            # Fill triplets_metrics
+            triplet_fp = count_triplet_in_pred - triplet_tp
+            triplet_fn = count_triplet_in_gt - triplet_tp
+            if (2 * triplet_tp + triplet_fp + triplet_fn) > 0:
+                triplet_f1 = (2 * triplet_tp) / (2 * triplet_tp + triplet_fp + triplet_fn)
+            else:
+                triplet_f1 = 0
+            triplets_metrics[f'({target[0]},{target[1]},{target[2]})'] = {
+                'tp': triplet_tp,
+                'fp': triplet_fp,
+                'fn': triplet_fn,
+                'count_pred': count_triplet_in_pred,
+                'count_gt': count_triplet_in_gt,
+                'precision': triplet_tp / (triplet_tp + triplet_fp) if (triplet_tp + triplet_fp) > 0 else 0,
+                'recall': triplet_tp / (triplet_tp + triplet_fn) if (triplet_tp + triplet_fn) > 0 else 0,
+                'f1': triplet_f1
+            }
+        return triplets_metrics
 
-    def calculate_metrics(self, pred_list: List, target_list: List) -> Tuple[float, float, float, int, int, int]:
+    def calculate_metrics(self, pred_list: List, target_list: List) -> Tuple[float, float, float, int, int, int, dict]:
         """
         Calculate recall and precision for a single prediction.
         :param pred: Prediction in string format.
         :param target_list: Target in list format.
         """
         self.samples_count += 1
-        recall = self.calculate_recall(pred_list, target_list)
-        self.total_recall += recall
-        precision = self.calculate_precision(pred_list, target_list)
-        self.total_precision += precision
-        f1 = self.calculate_f1(precision, recall)
-        self.total_f1 += f1
+        # recall = self.calculate_recall(pred_list, target_list)
+        # self.total_recall += recall
+        # precision = self.calculate_precision(pred_list, target_list)
+        # self.total_precision += precision
+        # f1 = self.calculate_f1(precision, recall)
+        # self.total_f1 += f1
         tp, fp, fn = self.get_tp_fp_fn(pred_list, target_list)
         self.total_tp += tp
         self.total_fp += fp
         self.total_fn += fn
-        self.update_heatmaps(pred_list, target_list)
-        return recall, precision, f1, tp, fp, fn
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+        self.total_precision += precision
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+        self.total_recall += recall
+        f1 = (2 * tp) / (2 * tp + fp + fn) if (2 * tp + fp + fn) > 0 else 0
+        self.total_f1 += f1
+        triplets_metrics = self.update_heatmaps(pred_list, target_list)
+        # Create metrics dictionary and append it to samples_metrics
+        metrics = {
+            "ground_truth": target_list,
+            "ground_truth_size": len(target_list),
+            "prediction": pred_list,
+            "prediction_size": len(pred_list),
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "tp": tp,
+            "fp": fp,
+            "fn": fn,
+            "triplets": triplets_metrics
+        }
+        self.samples_metrics.append(metrics)
+        return recall, precision, f1, tp, fp, fn, metrics
 
     def get_avg_recall(self) -> float:
         assert self.samples_count > 0, "At least one sample is required"
@@ -180,6 +221,7 @@ class Metrics:
         return self.total_f1 / self.samples_count
 
     def get_micro_avg_f1(self) -> float:
+        # Reference: https://www.iamirmasoud.com/2022/06/19/understanding-micro-macro-and-weighted-averages-for-scikit-learn-metrics-in-multi-class-classification-with-example/
         assert (self.total_tp + self.total_fp + self.total_fn) > 0, "One of TP, FP, and FN must be greater than 0"
         return self.total_tp / (self.total_tp + 0.5 * (self.total_fp + self.total_fn))
 
