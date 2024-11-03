@@ -31,6 +31,22 @@ class TestUtils(unittest.TestCase):
         target = [("car", "inFrontOf", "ego"), ("cat", "inFrontOf", "ego")]
         self.assertEqual(sg, target)
 
+        # Test with extra spaces
+        pred = "'[\n(Person, in_front_of, ego),\n(Car, to_left_of, ego)"
+        sg = parse_string_to_sg(pred)
+        target = [("Person", "in_front_of", "ego"), ("Car", "to_left_of", "ego")]
+        self.assertEqual(sg, target)
+        # Test entity mapping with capitalization
+        pred = "(Car, in_front_of, ego)"
+        sg = parse_string_to_sg(pred, map_entity=True)
+        target = [("vehicle", "in_front_of", "ego")]
+        self.assertEqual(sg, target)
+        # Test entity mapping without capitalization
+        pred = "(car, in_front_of, ego)"
+        sg = parse_string_to_sg(pred, map_entity=True)
+        target = [("vehicle", "in_front_of", "ego")]
+        self.assertEqual(sg, target)
+
         # Test partially incorrect input
         pred = "[\n(car, inFrontOf, ego),\n(cat, inFron"
         sg = parse_string_to_sg(pred)

@@ -139,6 +139,30 @@ def hf_llava_formatter(prompt: str, images: List[str], model_v: str, rel_questio
 
     return message, images_to_load
 
+def cambrian_formatter(prompt: str, images: List[str], rel_questions: List[str]) -> str:
+    check_prompt_consistency(prompt, images, rel_questions)
+    # Cambrian checks
+    count_system_message = prompt.count("||$*SYSTEM*$||")
+    assert count_system_message == 0, "Cambrian does not support system messages for few shot learning."
+    count_images = prompt.count("||$*IMAGE:")
+    assert count_images == 0, "Cambrian does not support multiple images for few shot learning."
+    count_user_message = prompt.count("||$*USER*$||")
+    assert count_user_message == 1, "Cambrian expects only one user message."
+
+    message = ""
+    # Retrieve user message
+    user_message_text = prompt.split("||$*USER*$||")[1]
+    user_message_text = user_message_text.split("||$*USER-END*$||")[0]
+    # Relationship Questions
+    if user_message_text.count("||$*REL_QUESTION*$||") == 1:
+        user_message_text = user_message_text.replace("||$*REL_QUESTION*$||", rel_questions.pop(0))
+    # Remove image placeholder
+    first_part = user_message_text.split("||$*IMAGE*$||")[0]
+    second_part = user_message_text.split("||$*IMAGE*$||")[1]
+    message += f"{first_part}{second_part}"
+
+    return message
+
 
 def flamingo_formatter(prompt: str, images: List[str], rel_questions: List[str]) -> Tuple[str, List[str]]:
     check_prompt_consistency(prompt, images, rel_questions)

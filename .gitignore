@@ -172,3 +172,6 @@ logs
 LLM_SRP
 prompts/prompts_old.py
 external_code/
+.llm_benchmark
+slurm_scripts
+slurm_outputs

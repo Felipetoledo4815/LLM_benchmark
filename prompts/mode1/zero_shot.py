@@ -65,12 +65,3 @@ LLAVA_FT_M1_ZERO_SHOT_PROMPT = \
 Give me the triplets.\
 ||$*USER-END*$||\
 """
-
-#TODO: Implement the following prompt
-PALIGEMMA_M1_ZERO_SHOT_PROMPT = \
-"""\
-||$*USER*$||\
-||$*IMAGE*$||\
-What do you see?\
-||$*USER-END*$||\
-"""

@@ -24,7 +24,8 @@ class Metrics:
                 df[entity.lower()] = 0.0
             self.precision_heatmap = df.copy()
             self.recall_heatmap = df.copy()
-            self.count_matrix = df.copy()
+            self.count_matrix_gt = df.copy()
+            self.count_matrix_pred = df.copy()
 
     def __sg_list_to_lower_key__(self, sg_list: List[Tuple[str, str, str]]) -> List[Tuple[str, str, str]]:
         formatted_list = []
@@ -45,6 +46,8 @@ class Metrics:
         assert isinstance(pred, list), "Prediction must be a list of triplets"
         pred_list = self.__sg_list_to_lower_key__(pred)
         target_list = self.__sg_list_to_lower_key__(target_list)
+        if len(pred_list) == 0 and len(target_list) == 0:
+            return 1.0
         # Calculate intersection
         intersection_count = 0
         for item in set(pred_list):
@@ -66,6 +69,8 @@ class Metrics:
         assert isinstance(pred, list), "Prediction must be a list of triplets"
         pred_list = self.__sg_list_to_lower_key__(pred)
         target_list = self.__sg_list_to_lower_key__(target_list)
+        if len(pred_list) == 0 and len(target_list) == 0:
+            return 1.0
         # Calculate intersection
         intersection_count = 0
         for item in set(pred_list):
@@ -139,15 +144,22 @@ class Metrics:
         triplets_metrics = {}
         pred_list = self.__sg_list_to_lower_key__(pred)
         target_list = self.__sg_list_to_lower_key__(target_list)
-        for target in set(target_list):
-            triplet_tp = min(pred_list.count(target), target_list.count(target))
-            count_triplet_in_gt = target_list.count(target)
-            count_triplet_in_pred = pred_list.count(target)
-            self.precision_heatmap.loc[target[1], target[0]] += triplet_tp / \
+        sanitized_pred_list = []
+        for t in pred_list:
+            ent, rel, ego = t
+            if ent in self.precision_heatmap.columns and rel in self.precision_heatmap.index and ego == 'ego':
+                sanitized_pred_list.append(t)
+        triplets_set = set(sanitized_pred_list + target_list)
+        for triplet in triplets_set:
+            triplet_tp = min(pred_list.count(triplet), target_list.count(triplet))
+            count_triplet_in_gt = target_list.count(triplet)
+            count_triplet_in_pred = pred_list.count(triplet)
+            self.precision_heatmap.loc[triplet[1], triplet[0]] += triplet_tp / \
                 count_triplet_in_pred if count_triplet_in_pred > 0 else 0
-            self.recall_heatmap.loc[target[1], target[0]] += triplet_tp / \
+            self.recall_heatmap.loc[triplet[1], triplet[0]] += triplet_tp / \
                 count_triplet_in_gt if count_triplet_in_gt > 0 else 0
-            self.count_matrix.loc[target[1], target[0]] += 1
+            self.count_matrix_pred.loc[triplet[1], triplet[0]] += 1 if count_triplet_in_pred > 0 else 0
+            self.count_matrix_gt.loc[triplet[1], triplet[0]] += 1 if count_triplet_in_gt > 0 else 0
             # Fill triplets_metrics
             triplet_fp = count_triplet_in_pred - triplet_tp
             triplet_fn = count_triplet_in_gt - triplet_tp
@@ -155,7 +167,7 @@ class Metrics:
                 triplet_f1 = (2 * triplet_tp) / (2 * triplet_tp + triplet_fp + triplet_fn)
             else:
                 triplet_f1 = 0
-            triplets_metrics[f'({target[0]},{target[1]},{target[2]})'] = {
+            triplets_metrics[f'({triplet[0]},{triplet[1]},{triplet[2]})'] = {
                 'tp': triplet_tp,
                 'fp': triplet_fp,
                 'fn': triplet_fn,
@@ -184,11 +196,17 @@ class Metrics:
         self.total_tp += tp
         self.total_fp += fp
         self.total_fn += fn
-        precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+        # Case where gt and prediction are empty
+        if tp == 0 and fp == 0 and fn == 0:
+            precision = 1
+            recall = 1
+            f1 = 1
+        else:
+            precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+            recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+            f1 = (2 * tp) / (2 * tp + fp + fn) if (2 * tp + fp + fn) > 0 else 0
         self.total_precision += precision
-        recall = tp / (tp + fn) if (tp + fn) > 0 else 0
         self.total_recall += recall
-        f1 = (2 * tp) / (2 * tp + fp + fn) if (2 * tp + fp + fn) > 0 else 0
         self.total_f1 += f1
         triplets_metrics = self.update_heatmaps(pred_list, target_list)
         # Create metrics dictionary and append it to samples_metrics
@@ -225,19 +243,23 @@ class Metrics:
         assert (self.total_tp + self.total_fp + self.total_fn) > 0, "One of TP, FP, and FN must be greater than 0"
         return self.total_tp / (self.total_tp + 0.5 * (self.total_fp + self.total_fn))
 
-    def plot_heatmaps(self, out_path: str | Path | None = None) -> None:
+    def plot_heatmaps(self, out_path: str | Path | None = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
         if self.precision_heatmap is None or self.recall_heatmap is None:
             return
         _, axes = plt.subplots(1, 2, figsize=(20, 10))
         assert isinstance(axes, np.ndarray), "Axes must be a numpy array"
-        aux_count_matrix = self.count_matrix.replace(0, 1, inplace=False)
-        mask_matrix = self.count_matrix == 0
-        avg_p_heatmap = self.precision_heatmap / aux_count_matrix
-        avg_p_heatmap[mask_matrix] = -1
+        # aux_count_matrix = self.count_matrix.replace(0, 1, inplace=False)
+        aux_count_matrix_pred = self.count_matrix_pred.replace(0, 1, inplace=False)
+        aux_count_matrix_gt = self.count_matrix_gt.replace(0, 1, inplace=False)
+        # mask_matrix = (self.count_matrix_pred + self.count_matrix_gt) == 0
+        mask_matrix_pred = self.count_matrix_pred == 0
+        mask_matrix_gt = self.count_matrix_gt == 0
+        avg_p_heatmap = self.precision_heatmap / aux_count_matrix_pred
+        avg_p_heatmap[mask_matrix_pred] = -1
         sns.heatmap(avg_p_heatmap, annot=True, fmt=".2f", ax=axes[0])
         axes[0].set_title("Precision Heatmap")
-        avg_r_heatmap = self.recall_heatmap / aux_count_matrix
-        avg_r_heatmap[mask_matrix] = -1
+        avg_r_heatmap = self.recall_heatmap / aux_count_matrix_gt
+        avg_r_heatmap[mask_matrix_gt] = -1
         sns.heatmap(avg_r_heatmap, annot=True, fmt=".2f", ax=axes[1])
         axes[1].set_title("Recall Heatmap")
 
@@ -246,3 +268,5 @@ class Metrics:
             plt.savefig(str(out_path))
         else:
             plt.show()
+
+        return avg_p_heatmap, avg_r_heatmap

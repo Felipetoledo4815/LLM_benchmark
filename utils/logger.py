@@ -2,6 +2,7 @@ from typing import Tuple, List
 from pathlib import Path
 import datetime
 import json
+import pickle
 from utils.metrics import Metrics
 
 class Logger:
@@ -22,6 +23,7 @@ class Logger:
                    parsed_prediction: List[Tuple[str,str,str]],
                    ground_truth: List[Tuple[str,str,str]],
                    image_id: int,
+                   image_path: str,
                    metrics: Tuple[float, float, float],
                    tp: int,
                    fp: int,
@@ -30,6 +32,7 @@ class Logger:
                    time: float | None = None) -> None:
         ground_truth_string = " [\n"+',\n'.join(['('+', '.join(item)+')' for item in ground_truth])+"\n]"
         log_entry = (f'image_id={image_id}\n' +
+                    f'image_path={image_path}\n' +
                     (f'time={time:.2f}\n' if time is not None else '') +
                     f'recall={metrics[0]:.3f}\n' +
                     f'precision={metrics[1]:.3f}\n' +
@@ -45,6 +48,7 @@ class Logger:
             f.write(log_entry)
         # Add more information to the metrics_dict
         metrics_dict['image_id'] = image_id
+        metrics_dict['img_path'] = image_path
         metrics_dict['time'] = time
         # Save the metrics_dict to a json file
         metrics_json_path = self.log_folder / "metrics.json"
@@ -71,6 +75,10 @@ class Logger:
             f.write(f"Total TP: {metrics.total_tp}\n")
             f.write(f"Total FP: {metrics.total_fp}\n")
             f.write(f"Total FN: {metrics.total_fn}\n")
+
+    def log_metric(self, metric: Metrics):
+        with open(self.log_folder / "metrics.pkl", 'wb') as f:
+            pickle.dump(metric, f) 
 
     def get_log_folder(self) -> Path:
         return self.log_folder

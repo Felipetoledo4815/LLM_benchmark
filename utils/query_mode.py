@@ -5,8 +5,23 @@ import os
 import cv2
 from vlm.vlm_interface import VLMInterface
 
+entity_mapper = {
+    "bus": "vehicle",
+    "van": "vehicle",
+    "car": "vehicle",
+    "tram": "vehicle",
+    "truck": "vehicle",
+    "ambulance": "vehicle",
+    "construction_vehicle": "vehicle",
+    "emergency_vehicle": "vehicle",
+    "motorcycle": "vehicle",
+    "trailer_truck": "vehicle",
+    "pedestrian": "person",
+    "adult": "person",
+    "child": "person"
+}
 
-def parse_string_to_sg(string: str) -> List[Tuple[str, str, str]] | List:
+def parse_string_to_sg(string: str, map_entity: bool = False) -> List[Tuple[str, str, str]] | List:
     # Pattern to match tuples like (element, relation, element)
     pattern = r"\(([^,]+), ([^,]+), ([^,]+)\)"
     # Find all matches of the pattern
@@ -20,6 +35,11 @@ def parse_string_to_sg(string: str) -> List[Tuple[str, str, str]] | List:
             print(f"Weird string: {string}. Skipping.")
             return []
         sanitized_item = tuple(elem.strip('\'"') for elem in item)
+        ent, rel, ego = sanitized_item
+        if map_entity:
+            if ent.lower() in entity_mapper:
+                ent = entity_mapper[ent.lower()]
+            sanitized_item = (ent, rel, ego)
         sanitized_sg_list.append(sanitized_item)
     return sanitized_sg_list
 
@@ -142,7 +162,7 @@ class QueryMode:
               images: List[str],
               bboxes: None = None) -> Tuple[str, List[Tuple[str, str, str]], float]:
         llm_output, time_spent = self.vlm.inference(prompt, images)
-        predicted_triplets = parse_string_to_sg(llm_output)
+        predicted_triplets = parse_string_to_sg(llm_output, map_entity=True)
         return llm_output, predicted_triplets, time_spent
 
     def mode2(self,
@@ -173,7 +193,7 @@ class QueryMode:
             temp_img_path = print_bb_on_image(images[0], bb)
             llm_output, time_spent = self.vlm.inference(prompt, [temp_img_path])
             all_llm_outputs.append(llm_output)
-            parsed_prediction = parse_string_to_sg(llm_output)
+            parsed_prediction = parse_string_to_sg(llm_output, map_entity=True)
             predicted_triplets.extend(parsed_prediction)
             time_per_image += time_spent
             os.remove(temp_img_path)

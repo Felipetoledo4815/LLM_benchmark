@@ -3,7 +3,7 @@
 ## Getting Started
 1. Create a conda environment
 ```bash
-conda create -n llm_benchmark python=3.10
+conda create --prefix .llm_benchmark python=3.10 -y
 ```
 2. Activate the environment
 ```bash

@@ -22,10 +22,11 @@ class SpaceLlavaWrapper(VLMInterface):
                                 n_ctx=n_ctx, logits_all=logits_all, n_gpu_layers=n_gpu_layers, verbose=verbose)
 
     def inference(self, prompt: str, images: List[str], **kwargs) -> Tuple[str, float]:
-        start = time()
         images_uri = []
         for img in images:
             images_uri.append(self.image_to_base64_data_uri(img))
+        
+        start = time()
         messages = self.parse_prompt(prompt, images_uri, **kwargs)
         results = self.spacellava.create_chat_completion(messages=messages)
         if isinstance(results, Iterator):

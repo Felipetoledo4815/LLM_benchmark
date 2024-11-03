@@ -19,12 +19,21 @@ NUMBER_WORDS = {
 }
 MODEL_NAMES = {
     "llava_1.6_mistral": "Llava 1.6 Mistral",
-    "llava_1.6_mistral_ft": "Llava 1.6 Mistral FT",
+    "llava_1.6_vicuna": "Llava 1.6 Vicuna",
+    "cambrian-llama3": "Cambrian-Llama3",
+    "cambrian-phi3": "Cambrian-Phi3",
     "spacellava": "SpaceLlava",
     "roadscene2vec": "RoadScene2Vec",
     "llava_1.5": "Llava 1.5",
     # "llava_1.5_ft_v1": "Llava 1.5 FT v1",
-    "llava_1.5_ft": "Llava 1.5 FT",
+    "llava_1.5_ft_m1": "Llava 1.5 FT m1",
+    "llava_1.5_lora_m1": "Llava 1.5 LoRA m1",
+    "llava_1.5_ft_m2": "Llava 1.5 FT m2",
+    "llava_1.5_lora_m2": "Llava 1.5 LoRA m2",
+    "llava_1.5_ft_m3": "Llava 1.5 FT m3",
+    "llava_1.5_lora_m3": "Llava 1.5 LoRA m3",
+    "llava_1.5_ft_m4": "Llava 1.5 FT m4",
+    "llava_1.5_lora_m4": "Llava 1.5 LoRA m4",
     "gpt": "GPT-4.0"
 }
 

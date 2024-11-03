@@ -14,8 +14,8 @@ relation_extraction_settings:
   LANE_THRESHOLD: 6 #feet. if object's center is more than this distance away from ego's center, build left or right lane relation. otherwise build middle lane relation
   DIRECTIONAL_THRESHOLDS: [['isIn',[[0,0]]], ['inFrontOf',[[45,90],[90,135]]], ['toLeftOf',[[135,180]]], ['toRightOf',[[0,45]]]] #Leftof and Rightof assumed to always be direction relations. additonal directional relations can be specified in the form [[relation], [[1st range of degrees], [2nd range of degrees], ..]]
   RELATION_COLORS: [['isIn','black'],['within_25m','red'], ['between_25m_and_40m','orange'], ['between_40m_and_60m','yellow'], ['inFrontOf','violet'], ['toLeftOf','blue'], ['toRightOf','blue']] #define relational edge colors for scenegraph visualization purposes in the format [relation, edge_color]
-  proximity_relation_list: [['car','road',60], ['ego_car', 'car',60]] #[[ACTORTYPE1, ACTORTYPE2, max proximity distance before relations are not extracted]]
-  directional_relation_list: [['car','road',60], ['ego_car', 'car',60]] #[[ACTORTYPE1, ACTORTYPE2, max proximity distance before relations are not extracted]] 
+  proximity_relation_list: [['ego_car','person',60],['ego_car','bycicle',60], ['ego_car','bus',60], ['ego_car','truck',60], ['ego_car','motorcycle',60], ['ego_car', 'car',60]] #[[ACTORTYPE1, ACTORTYPE2, max proximity distance before relations are not extracted]]
+  directional_relation_list: [['ego_car','person',60],['ego_car','bycicle',60], ['ego_car','bus',60], ['ego_car','truck',60], ['ego_car','motorcycle',60], ['ego_car', 'car',60]] #[[ACTORTYPE1, ACTORTYPE2, max proximity distance before relations are not extracted]] 
   
   #every type of actor in ACTOR_NAMES can have a list of synonymous names found in the object detection data. for a given ACTOR_NAMES array, all types of objects within the array are treated as objects of type ACTOR.
   MOTO_NAMES: ["moto","Harley-Davidson", "Kawasaki", "Yamaha"]

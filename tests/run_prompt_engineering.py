@@ -14,8 +14,11 @@ def load_prompt(prompt_path: Path) -> str:
 def main():
     parser = argparse.ArgumentParser("Prompt engineering for different models and modes.")
     parser.add_argument("--model", type=str,
-                        choices=['spacellava', 'llava_1.5', 'llava_1.5_ft', 'llava_1.6_mistral',
-                                 'llava_1.6_vicuna', "paligemma", "mobilevlm", "mobilevlm2", "openflamingo"],
+                        choices=['spacellava', 'llava_1.5',
+                                 'llava_1.5_ft_m1', 'llava_1.5_ft_m2', 'llava_1.5_ft_m3', 'llava_1.5_ft_m4',
+                                 'llava_1.5_lora_m1', 'llava_1.5_lora_m2', 'llava_1.5_lora_m3', 'llava_1.5_lora_m4',
+                                 'llava_1.6_mistral', 'llava_1.6_mistral_ft', 'llava_1.6_vicuna',
+                                 "paligemma", "openflamingo", "roadscene2vec", "cambrian-llama3", "cambrian-phi3"],
                         default='llava_1.5', help='Model to use for inference.')
     parser.add_argument("--lora", type=Path, default=None, help='Path to the LoRA model.')
     parser.add_argument("--mode", type=str, choices=['1', '2', '3', '4'],
@@ -34,11 +37,12 @@ def main():
 
     while True:
         img_path, triplets, bboxes = llm_srp_dataset[args.img_idx]
+        print("Image path:", img_path)
         assert isinstance(img_path, str), "Image path needs to be a string."
 
         prompt = load_prompt(args.prompt_path)
         llm_output, predicted_triplets, time_per_image = mode.query(prompt, [img_path], bboxes)
-        recall, precision, f1, tp, fp, fn = metrics.calculate_metrics(predicted_triplets, triplets)
+        recall, precision, f1, tp, fp, fn, metrics_dict = metrics.calculate_metrics(predicted_triplets, triplets)
 
         print("Time per image:", time_per_image)
         print("LLM output:", llm_output)
@@ -48,13 +52,12 @@ def main():
         print("---")
 
         print(f"Average time per prediction: {time_per_image:.2f}")
-        print(f"Average recall: {metrics.get_avg_recall():.3f}")
-        print(f"Average precision: {metrics.get_avg_precision():.3f}")
-        print(f"Macro Average F1: {metrics.get_macro_avg_f1():.3f}")
-        print(f"Micro Average F1: {metrics.get_micro_avg_f1():.3f}")
-        print(f"Total TP: {metrics.total_tp}")
-        print(f"Total FP: {metrics.total_fp}")
-        print(f"Total FN: {metrics.total_fn}")
+        print(f"Recall: {recall:.3f}")
+        print(f"Precision: {precision:.3f}")
+        print(f"F1: {f1:.3f}")
+        print(f"TP: {tp}")
+        print(f"FP: {fp}")
+        print(f"FN: {fn}")
 
         user_input = input("Click 'Enter' to reload prompt or type 'q' to exit")
         if user_input == 'q':

@@ -10,7 +10,7 @@ from utils.prompt_formatter import pali_gemma_formatter
 class HFPaliGemma(VLMInterface):
     def __init__(self, model_name: str, cache_dir: str | None = None) -> None:
         self.model_name = model_name.split('/')[-1]
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.processor = AutoProcessor.from_pretrained(model_name, use_auth_token=True)
         self.quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
