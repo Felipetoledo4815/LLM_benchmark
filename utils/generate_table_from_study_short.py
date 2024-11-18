@@ -19,23 +19,23 @@ NUMBER_WORDS = {
     'ten': 10
 }
 MODEL_NAMES = {
-    "llava_1.6_mistral": "Llava 1.6 Mistral",
-    "llava_1.6_vicuna": "Llava 1.6 Vicuna",
-    "cambrian-llama3": "Cambrian-Llama3",
-    "cambrian-phi3": "Cambrian-Phi3",
-    "spacellava": "SpaceLlava",
-    "roadscene2vec": "RoadScene2Vec",
-    "llava_1.5": "Llava 1.5",
-    "llava_1.5_ft_m1": "Llava 1.5 FT m1",
-    "llava_1.5_lora_m1": "Llava 1.5 LoRA m1",
-    "llava_1.5_ft_m2": "Llava 1.5 FT m2",
-    "llava_1.5_lora_m2": "Llava 1.5 LoRA m2",
-    "llava_1.5_ft_m3": "Llava 1.5 FT m3",
-    "llava_1.5_lora_m3": "Llava 1.5 LoRA m3",
-    "llava_1.5_ft_m4": "Llava 1.5 FT m4",
-    "llava_1.5_lora_m4": "Llava 1.5 LoRA m4",
-    "gpt": "GPT-4.0",
-    "paligemma": "Pali Gemma",
+    "llava_1.6_mistral": "L1.6-Mis",
+    "llava_1.6_vicuna": "L1.6-Vic",
+    "cambrian-llama3": "C-Llama3",
+    "cambrian-phi3": "C-Phi3",
+    "spacellava": "SpaceLlaVA",
+    "roadscene2vec": "RS2V",
+    "llava_1.5": "L1.5",
+    "llava_1.5_ft_m1": "L1.5-FT",
+    "llava_1.5_lora_m1": "L1.5-L",
+    "llava_1.5_ft_m2": "L1.5-FT",
+    "llava_1.5_lora_m2": "L1.5-L",
+    "llava_1.5_ft_m3": "L1.5-FT",
+    "llava_1.5_lora_m3": "L1.5-L",
+    "llava_1.5_ft_m4": "L1.5-FT",
+    "llava_1.5_lora_m4": "L1.5-L",
+    "gpt": "GPT-4.o",
+    "paligemma": "PaliGemma",
 }
 
 
@@ -82,24 +82,23 @@ def retrieve_summary_from_log(log_path: str) -> dict:
     df = pd.DataFrame(all_samples)
     total = df.agg({
         'time': 'mean',
-        'recall':'mean',
-        'precision':'mean',
+        # 'recall':'mean',
+        # 'precision':'mean',
         'f1':'mean'
     })
     d_metrics = df.groupby('dataset').agg({
-        'recall':'mean',
-        'precision':'mean',
+        # 'recall':'mean',
+        # 'precision':'mean',
         'f1':'mean'
     })
-    indexes = [np.array(["Mode","Time","Total","Total","Total","Kitti","Kitti","Kitti","Waymo","Waymo","Waymo","nuScenes","nuScenes","nuScenes"]), 
-               np.array(["","","P","R","F1","P","R","F1","P","R","F1","P","R","F1"])]
+    indexes = np.array(["QM","Time","Total","K","W","N"])
     total_values = total.values.flatten()
     d_metrics_values = d_metrics.values.flatten()
     # if len(d_metrics_values) < 9:
     #     return None
-    all_values = np.concatenate(([mode], total_values, d_metrics_values)).reshape(1,14)
+    all_values = np.concatenate(([mode], total_values, d_metrics_values)).reshape(1,6)
     result = pd.DataFrame(all_values, index=[MODEL_NAMES[model_name]], columns=indexes)
-    result["Mode"] = result["Mode"].astype(int)
+    result["QM"] = result["QM"].astype(int)
     return result
 
 def main():
@@ -120,7 +119,7 @@ def main():
                     data.append(summary)
 
     df = pd.concat(data)
-    df = df.reset_index().sort_values(by=['Mode', 'index']).set_index('index')
+    df = df.reset_index().sort_values(by=['QM', 'index']).set_index('index')
     df = df.reset_index().rename(columns={'index': 'Model'})
     
     # Set display options
@@ -134,43 +133,22 @@ def main():
     print(df)
 
     print("Latex Table\n")
-    # df = df.rename(columns={"model_name": "Model Name", "mode": "Mode", "nr_imgs": "\\# Imgs",
-    #                         "Average time per prediction": "\\makecell{Avg time \\\\ prediction}",
-    #                         "Average recall": "\\makecell{Avg \\\\ recall}",
-    #                         "Average precision": "\\makecell{Avg \\\\ precision}",
-    #                         "Macro Average F1": "\\makecell{Avg F1}",
-    #                         "Micro Average F1": "\\makecell{Micro \\\\ Avg F1}",
-    #                         "Total TP": "TP",
-    #                         "Total FP": "FP",
-    #                         "Total FN": "FN"})
-
-    # # Round values from colum "\\makecell{Avg F1}" to 3 decimal places
-    # df["\\makecell{Avg F1}"] = df["\\makecell{Avg F1}"].round(3)
-
-    # # Convert TP, FP, FN to int
-    # df["TP"] = df["TP"].astype(int)
-    # df["FP"] = df["FP"].astype(int)
-    # df["FN"] = df["FN"].astype(int)
 
     # Bold max values for Avg F1
     for m in range(1,5):
-        for f1 in [("Total", "F1"), ("Kitti", "F1"), ("Waymo", "F1"), ("nuScenes", "F1")]:
-            index = df[df["Mode"] == m].sort_values(f1, ascending=False).index[0]
+        for f1 in ["Total","K", "W", "N"]:
+            index = df[df["QM"] == m].sort_values(f1, ascending=False).index[0]
             value = df.loc[index, f1]
             df.loc[index, f1] = f"\\textbf{{{value:.2f}}}"
 
-        last_index = df[df["Mode"] == m].index[-1]
-        value_fn = df.loc[last_index, ("nuScenes", "F1")]
-        df.loc[last_index, ("nuScenes", "F1")] = f"{value_fn:.2f} \\\\ \\hline"
+        last_index = df[df["QM"] == m].index[-1]
+        value_fn = df.loc[last_index, "N"]
+        df.loc[last_index, "N"] = f"{value_fn:.2f} \\\\ \\hline"
 
     latex_text = df.to_latex(index=False, escape=False)
     latex_text = latex_text.replace('\\\\ \\hline \\\\', "\\\\ \\hline")
-    latex_text = latex_text.replace('lrrrrlrrlrrlrrl', 'l|c|c|ccc|ccc|ccc|ccc')
-    latex_text = latex_text.replace('\multicolumn{3}{l}{Total}', '\multicolumn{3}{c|}{Total}')
-    latex_text = latex_text.replace('\multicolumn{3}{l}{Kitti}', '\multicolumn{3}{c|}{Kitti}')
-    latex_text = latex_text.replace('\multicolumn{3}{l}{Waymo}', '\multicolumn{3}{c|}{Waymo}')
-    latex_text = latex_text.replace('\multicolumn{3}{l}{nuScenes}', '\multicolumn{3}{c}{nuScenes}')
-    latex_text = latex_text.replace('\multicolumn{3}{c}{nuScenes} \\\\','\multicolumn{3}{c}{nuScenes} \\\\ & &')
+    latex_text = latex_text.replace('lrrllll', 'p{1.5cm}cccccc')
+
     print(latex_text)
 
 if __name__ == '__main__':

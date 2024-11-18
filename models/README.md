@@ -40,6 +40,7 @@ This model should be downloaded automatically when executing the benchmark.
 
 ## Cambrian Llama3-8 and Phi3-3b
 TODO: Add instructions to download the models, and how to install library (Follow their readme instructions).
+TODO: In utils.py, check the version of transformers before importing HFLlavaNextWrapper and HFPaliGemma
 Problem: cambrian needs:
 ```
 transformers==4.37.0
