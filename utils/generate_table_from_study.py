@@ -19,23 +19,23 @@ NUMBER_WORDS = {
     'ten': 10
 }
 MODEL_NAMES = {
-    "llava_1.6_mistral": "Llava 1.6 Mistral",
-    "llava_1.6_vicuna": "Llava 1.6 Vicuna",
-    "cambrian-llama3": "Cambrian-Llama3",
-    "cambrian-phi3": "Cambrian-Phi3",
-    "spacellava": "SpaceLlava",
-    "roadscene2vec": "RoadScene2Vec",
-    "llava_1.5": "Llava 1.5",
-    "llava_1.5_ft_m1": "Llava 1.5 FT m1",
-    "llava_1.5_lora_m1": "Llava 1.5 LoRA m1",
-    "llava_1.5_ft_m2": "Llava 1.5 FT m2",
-    "llava_1.5_lora_m2": "Llava 1.5 LoRA m2",
-    "llava_1.5_ft_m3": "Llava 1.5 FT m3",
-    "llava_1.5_lora_m3": "Llava 1.5 LoRA m3",
-    "llava_1.5_ft_m4": "Llava 1.5 FT m4",
-    "llava_1.5_lora_m4": "Llava 1.5 LoRA m4",
-    "gpt": "GPT-4.0",
-    "paligemma": "Pali Gemma",
+    "llava_1.6_mistral": "L1.6-Mis",
+    "llava_1.6_vicuna": "L1.6-Vic",
+    "cambrian-llama3": "C-Llama3",
+    "cambrian-phi3": "C-Phi3",
+    "spacellava": "SpaceLlaVA",
+    "roadscene2vec": "RS2V",
+    "llava_1.5": "L1.5",
+    "llava_1.5_ft_m1": "L1.5-FT",
+    "llava_1.5_lora_m1": "L1.5-L",
+    "llava_1.5_ft_m2": "L1.5-FT",
+    "llava_1.5_lora_m2": "L1.5-L",
+    "llava_1.5_ft_m3": "L1.5-FT",
+    "llava_1.5_lora_m3": "L1.5-L",
+    "llava_1.5_ft_m4": "L1.5-FT",
+    "llava_1.5_lora_m4": "L1.5-L",
+    "gpt": "GPT-4-T",
+    "paligemma": "PaliGemma",
 }
 
 
@@ -91,8 +91,8 @@ def retrieve_summary_from_log(log_path: str) -> dict:
         'precision':'mean',
         'f1':'mean'
     })
-    indexes = [np.array(["Mode","Time","Total","Total","Total","Kitti","Kitti","Kitti","Waymo","Waymo","Waymo","nuScenes","nuScenes","nuScenes"]), 
-               np.array(["","","P","R","F1","P","R","F1","P","R","F1","P","R","F1"])]
+    indexes = [np.array(["QM","Time","Total","Total","Total","Kitti","Kitti","Kitti","Waymo","Waymo","Waymo","nuScenes","nuScenes","nuScenes"]), 
+               np.array(["","","R","P","F1","R","P","F1","R","P","F1","R","P","F1"])]
     total_values = total.values.flatten()
     d_metrics_values = d_metrics.values.flatten()
     # if len(d_metrics_values) < 9:
